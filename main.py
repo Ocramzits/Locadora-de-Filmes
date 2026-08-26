@@ -1,0 +1,1 @@
+# Sistema de locadora de filmes desenvolvido em Python com interface gráfica usando PySide6.
