@@ -349,9 +349,9 @@ class MainWindow(QMainWindow):
         self.botao_remover.setEnabled(tem_selecao)
 
         if tem_selecao:
-            disponivel = self.filmes[linha]["disponivel"]
-            self.botao_alugar.setEnabled(disponivel)
-            self.botao_devolver.setEnabled(not disponivel)
+            copias = self.filmes[linha]["copias"]
+            self.botao_alugar.setEnabled(copias > 0)
+            self.botao_devolver.setEnabled(True)
         else:
             self.botao_alugar.setEnabled(False)
             self.botao_devolver.setEnabled(False)
@@ -379,7 +379,11 @@ class MainWindow(QMainWindow):
     def registrar_locacao(self, titulo: str, cliente: str):
         for filme in self.filmes:
             if filme["titulo"] == titulo:
-                filme["disponivel"] = False
+                if filme["copias"] > 0:
+                    filme["copias"] -= 1
+                
+                if filme["copias"] == 0:
+                    filme["disponivel"] = False
                 break
 
         self._atualizar_tabela()
@@ -393,13 +397,14 @@ class MainWindow(QMainWindow):
         filme = self.filmes[linha]
         resposta = QMessageBox.question(
             self, "Confirmar devolução",
-            f"Confirmar devolução de '{filme['titulo']}'?",
+            f"Confirmar devolução de uma cópia de '{filme['titulo']}'?",
             QMessageBox.Yes | QMessageBox.No,
         )
         if resposta == QMessageBox.Yes:
+            filme["copias"] += 1
             filme["disponivel"] = True
             self._atualizar_tabela()
-            self.statusBar().showMessage(f"'{filme['titulo']}' devolvido", 4000)
+            self.statusBar().showMessage(f"Cópia de '{filme['titulo']}' devolvida", 4000)
 
     def remover_filme_selecionado(self):
         linha = self.tabela_filmes.currentRow()
@@ -418,7 +423,6 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Filme removido", 4000)
 
     def abrir_janela_clientes(self):
-        # Reaproveita a janela se já estiver aberta, em vez de criar outra
         if self.janela_clientes is None:
             self.janela_clientes = JanelaClientes(self.clientes, self)
             self.janela_clientes.cliente_adicionado.connect(self.registrar_novo_cliente)
@@ -440,7 +444,6 @@ class MainWindow(QMainWindow):
     # -- Eventos ---------------------------------------------------------
 
     def keyPressEvent(self, event):
-        # Tecla Delete remove o filme selecionado na tabela
         if event.key() == Qt.Key_Delete:
             self.remover_filme_selecionado()
         super().keyPressEvent(event)
