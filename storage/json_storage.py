@@ -12,6 +12,7 @@ class JsonStorage:
         self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.filmes_path = self.data_dir / "filmes.json"
+        self.clientes_path = self.data_dir / "clientes.json"
 
     def carregar_filmes(self) -> List[Dict[str, Any]]:
         if not self.filmes_path.exists():
@@ -70,3 +71,53 @@ class JsonStorage:
             self.salvar_filmes(filmes)
             return True
         return False
+
+    def carregar_clientes(self) -> List[str]:
+        if not self.clientes_path.exists():
+            return []
+
+        try:
+            with open(self.clientes_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return []
+
+    def salvar_clientes(self, clientes: List[str]) -> None:
+        with open(self.clientes_path, "w", encoding="utf-8") as f:
+            json.dump(clientes, f, indent=4, ensure_ascii=False)
+
+    def obter_clientes(self) -> List[str]:
+        return self.carregar_clientes()
+
+    def buscar_cliente(self, nome: str) -> Optional[str]:
+        clientes = self.carregar_clientes()
+        nome_alvo = nome.strip().lower()
+        for c in clientes:
+            if c.strip().lower() == nome_alvo:
+                return c
+        return None
+
+    def adicionar_cliente(self, nome: str) -> bool:
+        nome_limpo = nome.strip()
+        if not nome_limpo:
+            return False
+
+        clientes = self.carregar_clientes()
+        if any(c.strip().lower() == nome_limpo.lower() for c in clientes):
+            return False
+
+        clientes.append(nome_limpo)
+        self.salvar_clientes(clientes)
+        return True
+
+    def remover_cliente(self, nome: str) -> bool:
+        nome_alvo = nome.strip().lower()
+        clientes = self.carregar_clientes()
+        tamanho_original = len(clientes)
+
+        clientes = [c for c in clientes if c.strip().lower() != nome_alvo]
+        if len(clientes) < tamanho_original:
+            self.salvar_clientes(clientes)
+            return True
+        return False
+
