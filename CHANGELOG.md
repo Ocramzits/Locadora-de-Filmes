@@ -17,6 +17,14 @@
 - **CRUD de Clientes:** Implementação de operações de consulta, cadastro e exclusão de clientes em disco (`clientes.json`).
 - **Inicialização Automática de Dados:** Verificação automática e geração dos arquivos com dados padrão caso ainda não existam no diretório de dados.
 
+### Persistência CSV/TXT e Histórico de Transações (Guylherme Santos)
+
+- **Módulo de Log e Histórico CSV (`storage/csv_storage.py`):** Implementação da classe `CsvStorage` para persistência e registro tabular de locações e devoluções em formato CSV (`historico.csv`).
+- **Registro de Log em TXT (`storage/log_txt.py`):** Implementação da classe `LogTxt` para gravação de eventos cronológicos e operacionais da locadora em arquivo de texto legível (`transacoes.txt`).
+- **Consulta de Histórico e Filtros:** Implementação de métodos de leitura e consulta de transações passadas a partir de arquivos CSV, permitindo filtragem por cliente, filme, tipo de operação e período.
+- **Geração de Relatórios Básicos:** Métodos analíticos para identificar filmes mais alugados, clientes mais ativos, locações pendentes de devolução e resumo estatístico geral da locadora.
+- **Exportação no Pacote (`storage/__init__.py`):** Disponibilização de `CsvStorage` e `LogTxt` no pacote de armazenamento para integração com o sistema.
+
 ## Entrega 2 - 16/10/2026
 
 (A ser documentado com a implementação de threads e sincronização)
