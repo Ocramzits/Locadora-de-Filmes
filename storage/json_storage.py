@@ -2,17 +2,30 @@ import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+from models.filme import filmes_iniciais
+from models.cliente import clientes_iniciais
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_DIR = BASE_DIR / "data"
 
 
 class JsonStorage:
 
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Optional[Path] = None, auto_inicializar: bool = True):
         self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.filmes_path = self.data_dir / "filmes.json"
         self.clientes_path = self.data_dir / "clientes.json"
+
+        if auto_inicializar:
+            self.inicializar_dados_padrao()
+
+    def inicializar_dados_padrao(self) -> None:
+        if not self.filmes_path.exists() or self.filmes_path.stat().st_size == 0:
+            self.salvar_filmes(filmes_iniciais())
+
+        if not self.clientes_path.exists() or self.clientes_path.stat().st_size == 0:
+            self.salvar_clientes(clientes_iniciais())
 
     def carregar_filmes(self) -> List[Dict[str, Any]]:
         if not self.filmes_path.exists():
