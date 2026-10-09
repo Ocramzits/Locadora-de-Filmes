@@ -1,0 +1,72 @@
+import json
+from pathlib import Path
+from typing import List, Dict, Any, Optional
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DEFAULT_DATA_DIR = BASE_DIR / "data"
+
+
+class JsonStorage:
+
+    def __init__(self, data_dir: Optional[Path] = None):
+        self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self.filmes_path = self.data_dir / "filmes.json"
+
+    def carregar_filmes(self) -> List[Dict[str, Any]]:
+        if not self.filmes_path.exists():
+            return []
+
+        try:
+            with open(self.filmes_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, OSError):
+            return []
+
+    def salvar_filmes(self, filmes: List[Dict[str, Any]]) -> None:
+        with open(self.filmes_path, "w", encoding="utf-8") as f:
+            json.dump(filmes, f, indent=4, ensure_ascii=False)
+
+    def obter_filmes(self) -> List[Dict[str, Any]]:
+        return self.carregar_filmes()
+
+    def buscar_filme(self, titulo: str) -> Optional[Dict[str, Any]]:
+        filmes = self.carregar_filmes()
+        for f in filmes:
+            if f.get("titulo", "").lower() == titulo.strip().lower():
+                return f
+        return None
+
+    def adicionar_filme(self, novo_filme: Dict[str, Any]) -> bool:
+        filmes = self.carregar_filmes()
+        titulo_novo = novo_filme.get("titulo", "").strip().lower()
+
+        for f in filmes:
+            if f.get("titulo", "").strip().lower() == titulo_novo:
+                return False
+
+        filmes.append(novo_filme)
+        self.salvar_filmes(filmes)
+        return True
+
+    def atualizar_filme(self, titulo: str, dados_atualizados: Dict[str, Any]) -> bool:
+        filmes = self.carregar_filmes()
+        titulo_alvo = titulo.strip().lower()
+
+        for i, f in enumerate(filmes):
+            if f.get("titulo", "").strip().lower() == titulo_alvo:
+                filmes[i].update(dados_atualizados)
+                self.salvar_filmes(filmes)
+                return True
+        return False
+
+    def remover_filme(self, titulo: str) -> bool:
+        filmes = self.carregar_filmes()
+        titulo_alvo = titulo.strip().lower()
+        tamanho_original = len(filmes)
+
+        filmes = [f for f in filmes if f.get("titulo", "").strip().lower() != titulo_alvo]
+        if len(filmes) < tamanho_original:
+            self.salvar_filmes(filmes)
+            return True
+        return False
