@@ -27,4 +27,11 @@
 
 ## Entrega 2 - 16/10/2026
 
-(A ser documentado com a implementação de threads e sincronização)
+### Integração Interface Gráfica e Persistência (Marco Antônio)
+
+- **Camada de Serviço (`services/locadora_service.py`):** Criação da classe `LocadoraService`, que centraliza o uso de `JsonStorage`, `CsvStorage` e `LogTxt` e isola a interface dos detalhes de armazenamento.
+- **Carregamento na Inicialização:** A `MainWindow` agora carrega filmes e clientes dos arquivos JSON ao abrir o aplicativo, em vez de usar listas fixas em memória.
+- **Persistência Automática:** Cadastro, remoção, locação e devolução de filmes, bem como adição e remoção de clientes, são gravados imediatamente em disco.
+- **Histórico de Transações:** Cada locação e devolução é registrada em `historico.csv` e em `transacoes.txt`; na devolução, o cliente é identificado pela locação pendente no histórico.
+- **Prevenção de Duplicatas:** Os diálogos de novo filme e de clientes verificam títulos e nomes repetidos sem diferenciar maiúsculas e minúsculas.
+- **Controle de Versão:** A pasta `data/` foi adicionada ao `.gitignore`, pois os arquivos são gerados em tempo de execução.
