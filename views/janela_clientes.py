@@ -48,7 +48,7 @@ class JanelaClientes(QMainWindow):
             return
 
         for i in range(self.lista_widget.count()):
-            if self.lista_widget.item(i).text() == nome:
+            if self.lista_widget.item(i).text().lower() == nome.lower():
                 QMessageBox.warning(self, "Cliente existente", "Este cliente já está cadastrado.")
                 return
 
