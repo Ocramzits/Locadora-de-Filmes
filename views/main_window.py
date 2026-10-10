@@ -1,26 +1,26 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel, 
+    QMainWindow, QWidget, QVBoxLayout, QGridLayout, QLabel,
     QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QMessageBox
 )
 
-from models.filme import filmes_iniciais
-from models.cliente import clientes_iniciais
+from services.locadora_service import LocadoraService
 from views.dialogo_novo_filme import DialogoNovoFilme
 from views.dialogo_alugar import DialogoAlugarFilme
 from views.janela_clientes import JanelaClientes
 
 class MainWindow(QMainWindow):
-    
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Locadora de Filmes")
         self.resize(700, 450)
 
-        self.filmes = filmes_iniciais()
-        self.clientes = clientes_iniciais()
-        self.janela_clientes = None  
+        self.service = LocadoraService()
+        self.filmes = self.service.listar_filmes()
+        self.clientes = self.service.listar_clientes()
+        self.janela_clientes = None
 
         self._montar_interface()
         self._montar_toolbar()
@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Pronto")
 
     def _montar_interface(self):
-       
+
         self.tabela_filmes = QTableWidget(0, 4)
         self.tabela_filmes.setHorizontalHeaderLabels(
             ["Título", "Categoria", "Cópias", "Status"]
@@ -67,7 +67,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(container)
 
     def _montar_toolbar(self):
-        
+
         barra = self.addToolBar("Principal")
 
         acao_novo_filme = QAction("Novo Filme", self)
@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
         barra.addAction(acao_clientes)
 
     def _montar_menu(self):
-        
+
         menu_arquivo = self.menuBar().addMenu("Arquivo")
 
         acao_novo = QAction("Novo Filme", self)
@@ -110,7 +110,7 @@ class MainWindow(QMainWindow):
 
 
     def _atualizar_tabela(self):
-        
+
         self.tabela_filmes.setRowCount(0)
         for filme in self.filmes:
             linha = self.tabela_filmes.rowCount()
@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
             self.tabela_filmes.setItem(linha, 3, QTableWidgetItem(status))
 
     def atualizar_botoes_acao(self):
-        
+
         linha = self.tabela_filmes.currentRow()
         tem_selecao = linha >= 0
         self.botao_remover.setEnabled(tem_selecao)
@@ -136,12 +136,17 @@ class MainWindow(QMainWindow):
             self.botao_devolver.setEnabled(False)
 
     def abrir_dialogo_novo_filme(self):
-        dialogo = DialogoNovoFilme(self)
+        titulos = [f["titulo"] for f in self.filmes]
+        dialogo = DialogoNovoFilme(titulos, self)
         dialogo.filme_cadastrado.connect(self.cadastrar_filme)
         dialogo.exec()
 
     def cadastrar_filme(self, filme: dict):
-        self.filmes.append(filme)
+        if not self.service.cadastrar_filme(filme):
+            QMessageBox.warning(self, "Aviso", "Não foi possível cadastrar: filme já existe.")
+            return
+
+        self.filmes = self.service.listar_filmes()
         self._atualizar_tabela()
         self.statusBar().showMessage(f"Filme '{filme['titulo']}' cadastrado", 4000)
 
@@ -160,15 +165,11 @@ class MainWindow(QMainWindow):
         dialogo.exec()
 
     def registrar_locacao(self, titulo: str, cliente: str):
-        for filme in self.filmes:
-            if filme["titulo"] == titulo:
-                if filme["copias"] > 0:
-                    filme["copias"] -= 1
-                
-                if filme["copias"] == 0:
-                    filme["disponivel"] = False
-                break
+        if not self.service.alugar_filme(titulo, cliente):
+            QMessageBox.warning(self, "Aviso", "Não há cópias disponíveis para locação.")
+            return
 
+        self.filmes = self.service.listar_filmes()
         self._atualizar_tabela()
         self.statusBar().showMessage(f"'{titulo}' alugado para {cliente}", 5000)
 
@@ -189,10 +190,12 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No,
         )
         if resposta == QMessageBox.Yes:
-            filme["copias"] += 1
-            filme["disponivel"] = True
+            cliente = self.service.devolver_filme(filme["titulo"])
+            self.filmes = self.service.listar_filmes()
             self._atualizar_tabela()
-            self.statusBar().showMessage(f"Cópia de '{filme['titulo']}' devolvida", 4000)
+            self.statusBar().showMessage(
+                f"Cópia de '{filme['titulo']}' devolvida por {cliente}", 4000
+            )
 
     def remover_filme_selecionado(self):
         linha = self.tabela_filmes.currentRow()
@@ -206,7 +209,8 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No,
         )
         if resposta == QMessageBox.Yes:
-            self.filmes.pop(linha)
+            self.service.remover_filme(filme["titulo"])
+            self.filmes = self.service.listar_filmes()
             self._atualizar_tabela()
             self.statusBar().showMessage("Filme removido", 4000)
 
@@ -221,12 +225,12 @@ class MainWindow(QMainWindow):
         self.janela_clientes.activateWindow()
 
     def registrar_novo_cliente(self, nome: str):
-        if nome not in self.clientes:
-            self.clientes.append(nome)
+        self.service.adicionar_cliente(nome)
+        self.clientes = self.service.listar_clientes()
 
     def remover_cliente_lista(self, nome: str):
-        if nome in self.clientes:
-            self.clientes.remove(nome)
+        self.service.remover_cliente(nome)
+        self.clientes = self.service.listar_clientes()
 
     def mostrar_sobre(self):
         QMessageBox.about(
