@@ -1,6 +1,6 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
-    QDialog, QVBoxLayout, QFormLayout, QLineEdit, QComboBox, 
+    QDialog, QVBoxLayout, QFormLayout, QLineEdit, QComboBox,
     QSpinBox, QCheckBox, QDialogButtonBox, QMessageBox
 )
 from models.filme import CATEGORIAS
@@ -9,8 +9,9 @@ class DialogoNovoFilme(QDialog):
 
     filme_cadastrado = Signal(dict)
 
-    def __init__(self, parent=None):
+    def __init__(self, titulos_existentes=None, parent=None):
         super().__init__(parent)
+        self.titulos_existentes = titulos_existentes or []
         self.setWindowTitle("Cadastrar Filme")
         self.setFixedSize(320, 220)
 
@@ -47,6 +48,10 @@ class DialogoNovoFilme(QDialog):
 
         if not titulo:
             QMessageBox.warning(self, "Campo obrigatório", "Informe o título do filme.")
+            return
+
+        if titulo.lower() in [t.strip().lower() for t in self.titulos_existentes]:
+            QMessageBox.warning(self, "Filme existente", "Este filme já está cadastrado.")
             return
 
         novo_filme = {

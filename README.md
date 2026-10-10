@@ -28,3 +28,10 @@ Sistema Desktop para gerenciamento de catálogo e locações de uma locadora de 
 - **Barra de Ferramentas e Menu:** Navegação por menus (_Arquivo_, _Cadastro_, _Ajuda_) e atalhos de teclado (ex: `Ctrl+N` para cadastrar filme).
 - **Feedback ao Usuário:** Notificações, caixas de diálogo de aviso/confirmação (`QMessageBox`) e atualização contínua da barra de status.
 - **Layout Responsivo:** Redimensionamento automático das colunas da tabela.
+
+### Persistência de Dados
+
+- **Arquivos em disco (sem SGBD):** filmes e clientes em JSON (`data/filmes.json`, `data/clientes.json`); histórico de locações e devoluções em CSV (`data/historico.csv`) e log em TXT (`data/transacoes.txt`).
+- **Carregamento automático:** ao abrir o app os dados são lidos do disco; se os arquivos não existirem, são criados com dados iniciais.
+- **Camada de serviço:** `services/locadora_service.py` liga a interface aos storages.
+EOF
