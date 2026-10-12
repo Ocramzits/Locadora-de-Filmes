@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
 )
 
 from services.locadora_service import LocadoraService
+from threads.io_thread import IOThread
 from views.dialogo_novo_filme import DialogoNovoFilme
 from views.dialogo_alugar import DialogoAlugarFilme
 from views.janela_clientes import JanelaClientes
@@ -18,15 +19,18 @@ class MainWindow(QMainWindow):
         self.resize(700, 450)
 
         self.service = LocadoraService()
-        self.filmes = self.service.listar_filmes()
-        self.clientes = self.service.listar_clientes()
+        self.filmes = []
+        self.clientes = []
         self.janela_clientes = None
+        self.threads_ativas = []
+        self.operacoes_pendentes = 0
 
         self._montar_interface()
         self._montar_toolbar()
         self._montar_menu()
 
-        self.statusBar().showMessage("Pronto")
+        self.statusBar().showMessage("Carregando dados...")
+        self._executar_em_thread(self._tarefa_carregar)
 
     def _montar_interface(self):
 
@@ -69,6 +73,7 @@ class MainWindow(QMainWindow):
     def _montar_toolbar(self):
 
         barra = self.addToolBar("Principal")
+        self.barra_ferramentas = barra
 
         acao_novo_filme = QAction("Novo Filme", self)
         acao_novo_filme.setShortcut(QKeySequence("Ctrl+N"))
@@ -108,6 +113,71 @@ class MainWindow(QMainWindow):
         acao_sobre.triggered.connect(self.mostrar_sobre)
         menu_ajuda.addAction(acao_sobre)
 
+    def _executar_em_thread(self, tarefa, *args):
+        self.threads_ativas = [t for t in self.threads_ativas if not t.isFinished()]
+
+        thread = IOThread(self._rodar_tarefa, tarefa, *args)
+        thread.concluido.connect(self._ao_concluir)
+        thread.erro.connect(self._ao_erro)
+        thread.finished.connect(self._operacao_finalizada)
+
+        self.threads_ativas.append(thread)
+        self.operacoes_pendentes += 1
+        self._definir_ocupado(True)
+        thread.start()
+
+    def _rodar_tarefa(self, tarefa, *args):
+        mensagem = tarefa(*args)
+        return mensagem, self.service.listar_filmes(), self.service.listar_clientes()
+
+    def _ao_concluir(self, resultado):
+        mensagem, filmes, clientes = resultado
+        self.filmes = filmes
+        self.clientes = clientes
+        self._atualizar_tabela()
+        self.statusBar().showMessage(mensagem, 5000)
+
+    def _ao_erro(self, mensagem: str):
+        QMessageBox.critical(self, "Erro", f"Falha ao acessar os arquivos: {mensagem}")
+
+    def _operacao_finalizada(self):
+        self.operacoes_pendentes -= 1
+        if self.operacoes_pendentes == 0:
+            self._definir_ocupado(False)
+
+    def _definir_ocupado(self, ocupado: bool):
+        self.centralWidget().setEnabled(not ocupado)
+        self.menuBar().setEnabled(not ocupado)
+        self.barra_ferramentas.setEnabled(not ocupado)
+
+    def _tarefa_carregar(self):
+        return "Dados carregados"
+
+    def _tarefa_cadastrar_filme(self, filme: dict):
+        if self.service.cadastrar_filme(filme):
+            return f"Filme '{filme['titulo']}' cadastrado"
+        return "Não foi possível cadastrar: filme já existe"
+
+    def _tarefa_alugar(self, titulo: str, cliente: str):
+        if self.service.alugar_filme(titulo, cliente):
+            return f"'{titulo}' alugado para {cliente}"
+        return "Não há cópias disponíveis para locação"
+
+    def _tarefa_devolver(self, titulo: str):
+        cliente = self.service.devolver_filme(titulo)
+        return f"Cópia de '{titulo}' devolvida por {cliente}"
+
+    def _tarefa_remover_filme(self, titulo: str):
+        self.service.remover_filme(titulo)
+        return "Filme removido"
+
+    def _tarefa_adicionar_cliente(self, nome: str):
+        self.service.adicionar_cliente(nome)
+        return f"Cliente '{nome}' salvo"
+
+    def _tarefa_remover_cliente(self, nome: str):
+        self.service.remover_cliente(nome)
+        return f"Cliente '{nome}' removido"
 
     def _atualizar_tabela(self):
 
@@ -142,13 +212,8 @@ class MainWindow(QMainWindow):
         dialogo.exec()
 
     def cadastrar_filme(self, filme: dict):
-        if not self.service.cadastrar_filme(filme):
-            QMessageBox.warning(self, "Aviso", "Não foi possível cadastrar: filme já existe.")
-            return
-
-        self.filmes = self.service.listar_filmes()
-        self._atualizar_tabela()
-        self.statusBar().showMessage(f"Filme '{filme['titulo']}' cadastrado", 4000)
+        self.statusBar().showMessage("Salvando filme...")
+        self._executar_em_thread(self._tarefa_cadastrar_filme, filme)
 
     def abrir_dialogo_alugar(self):
         linha = self.tabela_filmes.currentRow()
@@ -165,13 +230,8 @@ class MainWindow(QMainWindow):
         dialogo.exec()
 
     def registrar_locacao(self, titulo: str, cliente: str):
-        if not self.service.alugar_filme(titulo, cliente):
-            QMessageBox.warning(self, "Aviso", "Não há cópias disponíveis para locação.")
-            return
-
-        self.filmes = self.service.listar_filmes()
-        self._atualizar_tabela()
-        self.statusBar().showMessage(f"'{titulo}' alugado para {cliente}", 5000)
+        self.statusBar().showMessage("Registrando locação...")
+        self._executar_em_thread(self._tarefa_alugar, titulo, cliente)
 
     def devolver_filme(self):
         linha = self.tabela_filmes.currentRow()
@@ -190,12 +250,8 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No,
         )
         if resposta == QMessageBox.Yes:
-            cliente = self.service.devolver_filme(filme["titulo"])
-            self.filmes = self.service.listar_filmes()
-            self._atualizar_tabela()
-            self.statusBar().showMessage(
-                f"Cópia de '{filme['titulo']}' devolvida por {cliente}", 4000
-            )
+            self.statusBar().showMessage("Registrando devolução...")
+            self._executar_em_thread(self._tarefa_devolver, filme["titulo"])
 
     def remover_filme_selecionado(self):
         linha = self.tabela_filmes.currentRow()
@@ -209,10 +265,8 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No,
         )
         if resposta == QMessageBox.Yes:
-            self.service.remover_filme(filme["titulo"])
-            self.filmes = self.service.listar_filmes()
-            self._atualizar_tabela()
-            self.statusBar().showMessage("Filme removido", 4000)
+            self.statusBar().showMessage("Removendo filme...")
+            self._executar_em_thread(self._tarefa_remover_filme, filme["titulo"])
 
     def abrir_janela_clientes(self):
         if self.janela_clientes is None:
@@ -225,12 +279,10 @@ class MainWindow(QMainWindow):
         self.janela_clientes.activateWindow()
 
     def registrar_novo_cliente(self, nome: str):
-        self.service.adicionar_cliente(nome)
-        self.clientes = self.service.listar_clientes()
+        self._executar_em_thread(self._tarefa_adicionar_cliente, nome)
 
     def remover_cliente_lista(self, nome: str):
-        self.service.remover_cliente(nome)
-        self.clientes = self.service.listar_clientes()
+        self._executar_em_thread(self._tarefa_remover_cliente, nome)
 
     def mostrar_sobre(self):
         QMessageBox.about(
@@ -258,6 +310,8 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No,
         )
         if resposta == QMessageBox.Yes:
+            for thread in self.threads_ativas:
+                thread.wait()
             event.accept()
         else:
             event.ignore()

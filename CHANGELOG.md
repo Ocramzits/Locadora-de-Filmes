@@ -35,3 +35,10 @@
 - **Histórico de Transações:** Cada locação e devolução é registrada em `historico.csv` e em `transacoes.txt`; na devolução, o cliente é identificado pela locação pendente no histórico.
 - **Prevenção de Duplicatas:** Os diálogos de novo filme e de clientes verificam títulos e nomes repetidos sem diferenciar maiúsculas e minúsculas.
 - **Controle de Versão:** A pasta `data/` foi adicionada ao `.gitignore`, pois os arquivos são gerados em tempo de execução.
+
+### I/O Assíncrono e Sincronização com QMutex (Marco Antônio)
+
+- **Controle de Concorrência (`utils/concurrency.py`):** Criação do `mutex_arquivos` (`QMutex`), compartilhado por todo o sistema para proteger a leitura e a gravação dos arquivos da pasta `data/` contra condições de corrida.
+- **Serviço Sincronizado (`services/locadora_service.py`):** Cada operação do `LocadoraService` passou a ser executada dentro de `QMutexLocker`, garantindo que as sequências de ler, alterar e gravar (locação e devolução) sejam atômicas.
+- **Thread de I/O (`threads/io_thread.py`):** Implementação da classe `IOThread` (herda de `QThread`), que executa qualquer operação de arquivo em segundo plano e comunica o resultado à interface pelos sinais `concluido` e `erro`.
+- **Interface Sem Travamentos (`views/main_window.py`):** Carregamento inicial, cadastro, locação, devolução e remoção passaram a rodar em `IOThread`. A interface é desabilitada durante a operação, é atualizada pelo slot ao receber o sinal e, ao fechar a janela, aguarda as threads em andamento.
