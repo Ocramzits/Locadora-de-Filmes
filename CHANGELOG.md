@@ -42,3 +42,8 @@
 - **Serviço Sincronizado (`services/locadora_service.py`):** Cada operação do `LocadoraService` passou a ser executada dentro de `QMutexLocker`, garantindo que as sequências de ler, alterar e gravar (locação e devolução) sejam atômicas.
 - **Thread de I/O (`threads/io_thread.py`):** Implementação da classe `IOThread` (herda de `QThread`), que executa qualquer operação de arquivo em segundo plano e comunica o resultado à interface pelos sinais `concluido` e `erro`.
 - **Interface Sem Travamentos (`views/main_window.py`):** Carregamento inicial, cadastro, locação, devolução e remoção passaram a rodar em `IOThread`. A interface é desabilitada durante a operação, é atualizada pelo slot ao receber o sinal e, ao fechar a janela, aguarda as threads em andamento.
+
+### Auto-Backup em Background (Domingos de Melo)
+
+- **Thread de Backup Temporizada (`threads/backup_thread.py`):** Implementação da classe `BackupThread` (herda de `QThread`), que roda em segundo plano e executa ciclos automáticos de salvamento do estado do sistema em intervalos configuráveis (padrão: 5 minutos), sem intervenção do usuário. Ao concluir cada ciclo, emite o sinal `backup_realizado` com o horário do último backup.
+- **Indicativo Visual na Barra de Status (`views/main_window.py`):** A `MainWindow` instancia e inicia a `BackupThread` durante sua inicialização. O sinal `backup_realizado` está conectado ao slot `_ao_backup_realizado`, que exibe na barra de status da janela a mensagem "Último backup: HH:MM" por 10 segundos. O encerramento da aplicação interrompe a thread de backup de forma segura via `parar()` e `wait()`.
