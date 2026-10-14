@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 
 from services.locadora_service import LocadoraService
 from threads.io_thread import IOThread
+from threads.backup_thread import BackupThread
 from views.dialogo_novo_filme import DialogoNovoFilme
 from views.dialogo_alugar import DialogoAlugarFilme
 from views.janela_clientes import JanelaClientes
@@ -28,6 +29,10 @@ class MainWindow(QMainWindow):
         self._montar_interface()
         self._montar_toolbar()
         self._montar_menu()
+
+        self.backup_thread = BackupThread(self.service, intervalo_segundos=300)
+        self.backup_thread.backup_realizado.connect(self._ao_backup_realizado)
+        self.backup_thread.start()
 
         self.statusBar().showMessage("Carregando dados...")
         self._executar_em_thread(self._tarefa_carregar)
@@ -149,6 +154,9 @@ class MainWindow(QMainWindow):
         self.centralWidget().setEnabled(not ocupado)
         self.menuBar().setEnabled(not ocupado)
         self.barra_ferramentas.setEnabled(not ocupado)
+
+    def _ao_backup_realizado(self, timestamp: str):
+        self.statusBar().showMessage(f"Último backup: {timestamp}", 10000)
 
     def _tarefa_carregar(self):
         return "Dados carregados"
@@ -310,6 +318,8 @@ class MainWindow(QMainWindow):
             QMessageBox.Yes | QMessageBox.No,
         )
         if resposta == QMessageBox.Yes:
+            self.backup_thread.parar()
+            self.backup_thread.wait()
             for thread in self.threads_ativas:
                 thread.wait()
             event.accept()
