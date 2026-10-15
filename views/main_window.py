@@ -8,9 +8,11 @@ from PySide6.QtWidgets import (
 from services.locadora_service import LocadoraService
 from threads.io_thread import IOThread
 from threads.backup_thread import BackupThread
+from threads.export_thread import ExportThread
 from views.dialogo_novo_filme import DialogoNovoFilme
 from views.dialogo_alugar import DialogoAlugarFilme
 from views.janela_clientes import JanelaClientes
+from views.dialog_progress import DialogProgress
 
 class MainWindow(QMainWindow):
 
@@ -23,6 +25,8 @@ class MainWindow(QMainWindow):
         self.filmes = []
         self.clientes = []
         self.janela_clientes = None
+        self.dialogo_progresso = None
+        self.export_thread = None
         self.threads_ativas = []
         self.operacoes_pendentes = 0
 
@@ -91,6 +95,13 @@ class MainWindow(QMainWindow):
         acao_clientes.triggered.connect(self.abrir_janela_clientes)
         barra.addAction(acao_clientes)
 
+        barra.addSeparator()
+
+        acao_exportar = QAction("Exportar Relatório", self)
+        acao_exportar.setShortcut(QKeySequence("Ctrl+E"))
+        acao_exportar.triggered.connect(self.exportar_relatorio)
+        barra.addAction(acao_exportar)
+
     def _montar_menu(self):
 
         menu_arquivo = self.menuBar().addMenu("Arquivo")
@@ -99,6 +110,11 @@ class MainWindow(QMainWindow):
         acao_novo.setShortcut(QKeySequence("Ctrl+N"))
         acao_novo.triggered.connect(self.abrir_dialogo_novo_filme)
         menu_arquivo.addAction(acao_novo)
+
+        acao_exportar = QAction("Exportar Relatório", self)
+        acao_exportar.setShortcut(QKeySequence("Ctrl+E"))
+        acao_exportar.triggered.connect(self.exportar_relatorio)
+        menu_arquivo.addAction(acao_exportar)
 
         menu_arquivo.addSeparator()
 
@@ -298,6 +314,30 @@ class MainWindow(QMainWindow):
             "Sistema de Locadora de Filmes\n"
             "Trabalho de POO II - PySide6\n",
         )
+
+    def exportar_relatorio(self):
+        self.dialogo_progresso = DialogProgress(self)
+        self.export_thread = ExportThread(self.service, parent=self)
+        self.export_thread.progresso.connect(self.dialogo_progresso.atualizar_progresso)
+        self.export_thread.concluido.connect(self._ao_exportacao_concluida)
+        self.export_thread.erro.connect(self._ao_exportacao_erro)
+        self.export_thread.finished.connect(self._ao_exportacao_finalizada)
+        self.threads_ativas.append(self.export_thread)
+        self.dialogo_progresso.show()
+        self.export_thread.start()
+
+    def _ao_exportacao_concluida(self, caminho: str):
+        if self.dialogo_progresso:
+            self.dialogo_progresso.ao_concluir(caminho)
+        self.statusBar().showMessage(f"Relatório exportado para: {caminho}", 5000)
+
+    def _ao_exportacao_erro(self, mensagem: str):
+        if self.dialogo_progresso:
+            self.dialogo_progresso.ao_erro(mensagem)
+        QMessageBox.critical(self, "Erro na Exportação", f"Falha ao exportar relatório: {mensagem}")
+
+    def _ao_exportacao_finalizada(self):
+        self.threads_ativas = [t for t in self.threads_ativas if not t.isFinished()]
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete:
