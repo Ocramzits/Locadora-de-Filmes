@@ -47,3 +47,9 @@
 
 - **Thread de Backup Temporizada (`threads/backup_thread.py`):** Implementação da classe `BackupThread` (herda de `QThread`), que roda em segundo plano e executa ciclos automáticos de salvamento do estado do sistema em intervalos configuráveis (padrão: 5 minutos), sem intervenção do usuário. Ao concluir cada ciclo, emite o sinal `backup_realizado` com o horário do último backup.
 - **Indicativo Visual na Barra de Status (`views/main_window.py`):** A `MainWindow` instancia e inicia a `BackupThread` durante sua inicialização. O sinal `backup_realizado` está conectado ao slot `_ao_backup_realizado`, que exibe na barra de status da janela a mensagem "Último backup: HH:MM" por 10 segundos. O encerramento da aplicação interrompe a thread de backup de forma segura via `parar()` e `wait()`.
+
+### Exportação de Relatórios e Barra de Progresso (Guylherme Santos)
+
+- **Thread de Exportação (`threads/export_thread.py`):** Implementação da classe `ExportThread` (herda de `QThread`), que processa a compilação de relatórios e dados da locadora em segundo plano de forma concorrente e sem congelamento da interface. Durante a execução, emite sinais de progresso com porcentagem inteira (`progresso` e `porcentagem`), além dos sinais `concluido` e `erro`.
+- **Janela de Progresso (`views/dialog_progress.py`):** Criação da classe `DialogProgress` utilizando `QProgressBar` para exibir o avanço percentual da exportação de relatórios em tempo real.
+- **Integração na Janela Principal (`views/main_window.py`):** Adição da funcionalidade de exportação de relatórios via barra de ferramentas e menu de arquivo (`Ctrl+E`). A interface aciona a `ExportThread` conectada aos sinais de atualização do `DialogProgress` e notifica o usuário na barra de status após a conclusão.
