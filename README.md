@@ -12,31 +12,19 @@ Projeto desenvolvido para a disciplina de **Programação Orientada a Objetos II
 
 ## Sumário
 
-1. [Visão Geral do Projeto](#-visão-geral-do-projeto)
-2. [Arquitetura de Software: Padrão MVC](#-arquitetura-de-software-padrão-mvc)
+1. [Arquitetura de Software: Padrão MVC](#-arquitetura-de-software-padrão-mvc)
    - [O que é o padrão MVC?](#o-que-é-o-padrão-mvc)
    - [Como o MVC foi aplicado neste projeto?](#como-o-mvc-foi-aplicado-neste-projeto)
    - [Por que usamos o padrão MVC? (Vantagens)](#por-que-usamos-o-padrão-mvc-vantagens)
-3. [Concorrência, Multithreading e Sincronização (2ª Entrega)](#-concorrência-multithreading-e-sincronização-2ª-entrega)
+2. [Concorrência, Multithreading e Sincronização (2ª Entrega)](#-concorrência-multithreading-e-sincronização-2ª-entrega)
    - [O Problema do Congelamento da Interface (GUI)](#o-problema-do-congelamento-da-interface-gui)
    - [A Solução com Threads e Signals/Slots](#a-solução-com-threads-e-signalsslots)
    - [Sincronização com QMutex e Prevenção de Condições de Corrida](#sincronização-com-qmutex-e-prevenção-de-condições-de-corrida)
    - [As Três Threads do Sistema](#as-três-threads-do-sistema)
-4. [Persistência de Dados Poliglota (Sem SGBD)](#-persistência-de-dados-poliglota-sem-sgbd)
-5. [Funcionalidades do Sistema](#-funcionalidades-do-sistema)
-6. [Estrutura do Projeto](#-estrutura-do-projeto)
-7. [Como Instalar e Executar](#-como-instalar-e-executar)
-8. [Atalhos de Teclado](#-atalhos-de-teclado)
-9. [Roteiro Sugerido para Apresentação em Sala (20 Minutos)](#-roteiro-sugerido-para-apresentação-em-sala-20-minutos)
-
-## Visão Geral do Projeto
-
-O sistema simula as operações do dia a dia de uma locadora física de filmes, permitindo gerenciar o acervo de filmes, realizar o controle de clientes cadastrados, registrar empréstimos e devoluções em tempo real, além de extrair relatórios gerenciais e manter backups periódicos.
-
-O projeto foi dividido em duas grandes etapas pedagógicas:
-
-- **1ª Entrega (Modularização & Persistência):** Separação do monolito em arquitetura MVC, isolamento em pacotes e implementação da persistência em disco sem auxílio de banco de dados (JSON, CSV e TXT).
-- **2ª Entrega (Concorrência & Sincronização):** Eliminação de gargalos de I/O na interface gráfica por meio de `QThread`, criação de rotinas em segundo plano (auto-backup e exportador de relatórios com barra de progresso) e blindagem contra condições de corrida via `QMutex`.
+3. [Persistência de Dados Poliglota (Sem SGBD)](#-persistência-de-dados-poliglota-sem-sgbd)
+4. [Funcionalidades do Sistema](#-funcionalidades-do-sistema)
+5. [Estrutura do Projeto](#-estrutura-do-projeto)
+6. [Atalhos de Teclado](#-atalhos-de-teclado)
 
 ## Arquitetura de Software: Padrão MVC
 
