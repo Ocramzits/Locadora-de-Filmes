@@ -214,7 +214,6 @@ O sistema cumpre integralmente a exigência de manipulação de múltiplos forma
 │   ├── historico.csv
 │   ├── transacoes.txt
 │   └── relatorio_exportado.txt
-├── pdfs/                            # Especificações e requisitos oficiais da disciplina
 ├── CHANGELOG.md                     # Histórico detalhado das entregas parciais
 └── README.md                        # Documentação oficial do projeto
 ```
