@@ -9,6 +9,7 @@ class DialogoNovoFilme(QDialog):
 
     filme_cadastrado = Signal(dict)
 
+    # Constrói o formulário modal de cadastro de filme com título, categoria e cópias
     def __init__(self, titulos_existentes=None, parent=None):
         super().__init__(parent)
         self.titulos_existentes = titulos_existentes or []
@@ -43,6 +44,7 @@ class DialogoNovoFilme(QDialog):
         layout.addWidget(botoes)
         self.setLayout(layout)
 
+    # Valida as informações inseridas e emite o sinal com o dicionário do novo filme
     def confirmar_cadastro(self):
         titulo = self.campo_titulo.text().strip()
 

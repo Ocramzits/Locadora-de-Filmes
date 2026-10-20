@@ -10,6 +10,7 @@ class JanelaClientes(QMainWindow):
     cliente_adicionado = Signal(str)
     cliente_removido = Signal(str)
 
+    # Constrói a janela secundária com a lista de clientes, campo de texto e toolbar
     def __init__(self, lista_clientes: list, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Clientes Cadastrados")
@@ -41,6 +42,7 @@ class JanelaClientes(QMainWindow):
 
         self.statusBar().showMessage(f"{self.lista_widget.count()} cliente(s) cadastrado(s)")
 
+    # Valida e adiciona um novo cliente à lista visual e emite o sinal correspondente
     def adicionar_cliente(self):
         nome = self.campo_novo_cliente.text().strip()
         if not nome:
@@ -57,6 +59,7 @@ class JanelaClientes(QMainWindow):
         self.campo_novo_cliente.clear()
         self.statusBar().showMessage(f"{self.lista_widget.count()} cliente(s) cadastrado(s)")
 
+    # Pede confirmação e remove o cliente selecionado na lista, emitindo o sinal
     def remover_cliente_selecionado(self):
         item_atual = self.lista_widget.currentItem()
         if item_atual is None:
@@ -75,6 +78,7 @@ class JanelaClientes(QMainWindow):
             self.cliente_removido.emit(nome_cliente)
             self.statusBar().showMessage(f"{self.lista_widget.count()} cliente(s) cadastrado(s)")
 
+    # Trata evento de teclado: pressionar Delete remove o cliente selecionado
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete:
             self.remover_cliente_selecionado()

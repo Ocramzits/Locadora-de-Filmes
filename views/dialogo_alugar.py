@@ -7,6 +7,7 @@ class DialogoAlugarFilme(QDialog):
 
     filme_alugado = Signal(str, str)  
 
+    # Constrói o diálogo modal de locação exibindo o filme e o combo de clientes
     def __init__(self, titulo_filme: str, lista_clientes: list, parent=None):
         super().__init__(parent)
         self.titulo_filme = titulo_filme
@@ -26,6 +27,7 @@ class DialogoAlugarFilme(QDialog):
         layout.addWidget(botao_confirmar)
         self.setLayout(layout)
 
+    # Exibe caixa de confirmação e emite o sinal para registrar o aluguel
     def confirmar_locacao(self):
         cliente = self.combo_cliente.currentText()
         resposta = QMessageBox.question(

@@ -13,11 +13,13 @@ class ExportThread(QThread):
     concluido = Signal(str)
     erro = Signal(str)
 
+    # Inicializa a thread de exportação com o serviço e o caminho do arquivo de destino
     def __init__(self, service=None, caminho_destino=None, parent=None):
         super().__init__(parent)
         self.service = service if service is not None else LocadoraService()
         self.caminho_destino = Path(caminho_destino) if caminho_destino else Path("data") / "relatorio_exportado.txt"
 
+    # Coleta dados, gera o texto do relatório e salva no arquivo, emitindo sinais de progresso
     def run(self):
         try:
             self.progresso.emit(0)

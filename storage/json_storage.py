@@ -11,6 +11,7 @@ DEFAULT_DATA_DIR = BASE_DIR / "data"
 
 class JsonStorage:
 
+    # Inicializa o storage JSON definindo os caminhos dos arquivos filmes.json e clientes.json
     def __init__(self, data_dir: Optional[Path] = None, auto_inicializar: bool = True):
         self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -20,6 +21,7 @@ class JsonStorage:
         if auto_inicializar:
             self.inicializar_dados_padrao()
 
+    # Cria e preenche os arquivos JSON com dados iniciais se não existirem
     def inicializar_dados_padrao(self) -> None:
         if not self.filmes_path.exists() or self.filmes_path.stat().st_size == 0:
             self.salvar_filmes(filmes_iniciais())
@@ -27,6 +29,7 @@ class JsonStorage:
         if not self.clientes_path.exists() or self.clientes_path.stat().st_size == 0:
             self.salvar_clientes(clientes_iniciais())
 
+    # Lê o arquivo filmes.json e retorna a lista de filmes
     def carregar_filmes(self) -> List[Dict[str, Any]]:
         if not self.filmes_path.exists():
             return []
@@ -37,13 +40,16 @@ class JsonStorage:
         except (json.JSONDecodeError, OSError):
             return []
 
+    # Grava a lista completa de filmes no arquivo filmes.json
     def salvar_filmes(self, filmes: List[Dict[str, Any]]) -> None:
         with open(self.filmes_path, "w", encoding="utf-8") as f:
             json.dump(filmes, f, indent=4, ensure_ascii=False)
 
+    # Retorna todos os filmes cadastrados no arquivo JSON
     def obter_filmes(self) -> List[Dict[str, Any]]:
         return self.carregar_filmes()
 
+    # Busca um filme pelo título (case-insensitive)
     def buscar_filme(self, titulo: str) -> Optional[Dict[str, Any]]:
         filmes = self.carregar_filmes()
         for f in filmes:
@@ -51,6 +57,7 @@ class JsonStorage:
                 return f
         return None
 
+    # Adiciona um novo filme ao arquivo JSON se não houver duplicidade
     def adicionar_filme(self, novo_filme: Dict[str, Any]) -> bool:
         filmes = self.carregar_filmes()
         titulo_novo = novo_filme.get("titulo", "").strip().lower()
@@ -63,6 +70,7 @@ class JsonStorage:
         self.salvar_filmes(filmes)
         return True
 
+    # Atualiza as informações de um filme existente no arquivo JSON
     def atualizar_filme(self, titulo: str, dados_atualizados: Dict[str, Any]) -> bool:
         filmes = self.carregar_filmes()
         titulo_alvo = titulo.strip().lower()
@@ -74,6 +82,7 @@ class JsonStorage:
                 return True
         return False
 
+    # Remove um filme do arquivo JSON pelo título
     def remover_filme(self, titulo: str) -> bool:
         filmes = self.carregar_filmes()
         titulo_alvo = titulo.strip().lower()
@@ -85,6 +94,7 @@ class JsonStorage:
             return True
         return False
 
+    # Lê o arquivo clientes.json e retorna a lista de nomes dos clientes
     def carregar_clientes(self) -> List[str]:
         if not self.clientes_path.exists():
             return []
@@ -95,13 +105,16 @@ class JsonStorage:
         except (json.JSONDecodeError, OSError):
             return []
 
+    # Grava a lista de nomes de clientes no arquivo clientes.json
     def salvar_clientes(self, clientes: List[str]) -> None:
         with open(self.clientes_path, "w", encoding="utf-8") as f:
             json.dump(clientes, f, indent=4, ensure_ascii=False)
 
+    # Retorna todos os clientes cadastrados no arquivo JSON
     def obter_clientes(self) -> List[str]:
         return self.carregar_clientes()
 
+    # Busca um cliente cadastrado pelo nome
     def buscar_cliente(self, nome: str) -> Optional[str]:
         clientes = self.carregar_clientes()
         nome_alvo = nome.strip().lower()
@@ -110,6 +123,7 @@ class JsonStorage:
                 return c
         return None
 
+    # Adiciona um novo cliente no JSON caso o nome não seja repetido
     def adicionar_cliente(self, nome: str) -> bool:
         nome_limpo = nome.strip()
         if not nome_limpo:
@@ -123,6 +137,7 @@ class JsonStorage:
         self.salvar_clientes(clientes)
         return True
 
+    # Remove um cliente da lista salva no arquivo JSON
     def remover_cliente(self, nome: str) -> bool:
         nome_alvo = nome.strip().lower()
         clientes = self.carregar_clientes()

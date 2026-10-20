@@ -16,6 +16,7 @@ from views.dialog_progress import DialogProgress
 
 class MainWindow(QMainWindow):
 
+    # Construtor: inicializa janelas, serviços, threads e monta a tela principal
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Locadora de Filmes")
@@ -41,6 +42,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Carregando dados...")
         self._executar_em_thread(self._tarefa_carregar)
 
+    # Cria a tabela de filmes e os botões de ação (Alugar, Devolver, Remover)
     def _montar_interface(self):
 
         self.tabela_filmes = QTableWidget(0, 4)
@@ -79,6 +81,7 @@ class MainWindow(QMainWindow):
         container.setLayout(layout_principal)
         self.setCentralWidget(container)
 
+    # Cria a barra de ferramentas superior com atalhos rápidos
     def _montar_toolbar(self):
 
         barra = self.addToolBar("Principal")
@@ -102,6 +105,7 @@ class MainWindow(QMainWindow):
         acao_exportar.triggered.connect(self.exportar_relatorio)
         barra.addAction(acao_exportar)
 
+    # Cria os menus da barra superior (Arquivo, Cadastro, Ajuda)
     def _montar_menu(self):
 
         menu_arquivo = self.menuBar().addMenu("Arquivo")
@@ -134,6 +138,7 @@ class MainWindow(QMainWindow):
         acao_sobre.triggered.connect(self.mostrar_sobre)
         menu_ajuda.addAction(acao_sobre)
 
+    # Executa uma operação assíncrona usando IOThread para não travar a interface gráfica
     def _executar_em_thread(self, tarefa, *args):
         self.threads_ativas = [t for t in self.threads_ativas if not t.isFinished()]
 
@@ -147,10 +152,12 @@ class MainWindow(QMainWindow):
         self._definir_ocupado(True)
         thread.start()
 
+    # Executa a tarefa de I/O e recarrega os filmes e clientes atualizados
     def _rodar_tarefa(self, tarefa, *args):
         mensagem = tarefa(*args)
         return mensagem, self.service.listar_filmes(), self.service.listar_clientes()
 
+    # Callback de sucesso da IOThread: atualiza os dados locais, tabela e barra de status
     def _ao_concluir(self, resultado):
         mensagem, filmes, clientes = resultado
         self.filmes = filmes
@@ -158,51 +165,63 @@ class MainWindow(QMainWindow):
         self._atualizar_tabela()
         self.statusBar().showMessage(mensagem, 5000)
 
+    # Callback de erro da IOThread: exibe mensagem com o erro ocorrido
     def _ao_erro(self, mensagem: str):
         QMessageBox.critical(self, "Erro", f"Falha ao acessar os arquivos: {mensagem}")
 
+    # Controla as operações assíncronas pendentes e reabilita os componentes da tela
     def _operacao_finalizada(self):
         self.operacoes_pendentes -= 1
         if self.operacoes_pendentes == 0:
             self._definir_ocupado(False)
 
+    # Desabilita ou reabilita os controles da tela durante o processamento em background
     def _definir_ocupado(self, ocupado: bool):
         self.centralWidget().setEnabled(not ocupado)
         self.menuBar().setEnabled(not ocupado)
         self.barra_ferramentas.setEnabled(not ocupado)
 
+    # Atualiza a barra de status quando a thread de backup periódico emite notificação
     def _ao_backup_realizado(self, timestamp: str):
         self.statusBar().showMessage(f"Último backup: {timestamp}", 10000)
 
+    # Tarefa em segundo plano para carregar a listagem inicial de dados
     def _tarefa_carregar(self):
         return "Dados carregados"
 
+    # Tarefa em segundo plano que solicita o cadastro do filme ao serviço
     def _tarefa_cadastrar_filme(self, filme: dict):
         if self.service.cadastrar_filme(filme):
             return f"Filme '{filme['titulo']}' cadastrado"
         return "Não foi possível cadastrar: filme já existe"
 
+    # Tarefa em segundo plano que executa a locação através do serviço
     def _tarefa_alugar(self, titulo: str, cliente: str):
         if self.service.alugar_filme(titulo, cliente):
             return f"'{titulo}' alugado para {cliente}"
         return "Não há cópias disponíveis para locação"
 
+    # Tarefa em segundo plano que executa a devolução através do serviço
     def _tarefa_devolver(self, titulo: str):
         cliente = self.service.devolver_filme(titulo)
         return f"Cópia de '{titulo}' devolvida por {cliente}"
 
+    # Tarefa em segundo plano que remove o filme através do serviço
     def _tarefa_remover_filme(self, titulo: str):
         self.service.remover_filme(titulo)
         return "Filme removido"
 
+    # Tarefa em segundo plano que cadastra o cliente através do serviço
     def _tarefa_adicionar_cliente(self, nome: str):
         self.service.adicionar_cliente(nome)
         return f"Cliente '{nome}' salvo"
 
+    # Tarefa em segundo plano que remove o cliente através do serviço
     def _tarefa_remover_cliente(self, nome: str):
         self.service.remover_cliente(nome)
         return f"Cliente '{nome}' removido"
 
+    # Preenche as linhas da QTableWidget com a lista atual de filmes
     def _atualizar_tabela(self):
 
         self.tabela_filmes.setRowCount(0)
@@ -215,6 +234,7 @@ class MainWindow(QMainWindow):
             status = "Disponível" if filme["disponivel"] else "Alugado"
             self.tabela_filmes.setItem(linha, 3, QTableWidgetItem(status))
 
+    # Habilita ou desabilita botões de ação conforme a seleção na tabela
     def atualizar_botoes_acao(self):
 
         linha = self.tabela_filmes.currentRow()
@@ -229,16 +249,19 @@ class MainWindow(QMainWindow):
             self.botao_alugar.setEnabled(False)
             self.botao_devolver.setEnabled(False)
 
+    # Abre o diálogo modal para cadastrar um novo filme
     def abrir_dialogo_novo_filme(self):
         titulos = [f["titulo"] for f in self.filmes]
         dialogo = DialogoNovoFilme(titulos, self)
         dialogo.filme_cadastrado.connect(self.cadastrar_filme)
         dialogo.exec()
 
+    # Inicia a thread secundária para gravar o filme cadastrado
     def cadastrar_filme(self, filme: dict):
         self.statusBar().showMessage("Salvando filme...")
         self._executar_em_thread(self._tarefa_cadastrar_filme, filme)
 
+    # Abre a janela modal para selecionar o cliente e alugar o filme selecionado
     def abrir_dialogo_alugar(self):
         linha = self.tabela_filmes.currentRow()
         if linha < 0:
@@ -253,10 +276,12 @@ class MainWindow(QMainWindow):
         dialogo.filme_alugado.connect(self.registrar_locacao)
         dialogo.exec()
 
+    # Inicia a thread secundária para registrar a locação do filme
     def registrar_locacao(self, titulo: str, cliente: str):
         self.statusBar().showMessage("Registrando locação...")
         self._executar_em_thread(self._tarefa_alugar, titulo, cliente)
 
+    # Confirma e inicia a thread secundária para devolver uma cópia do filme
     def devolver_filme(self):
         linha = self.tabela_filmes.currentRow()
         if linha < 0:
@@ -277,6 +302,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Registrando devolução...")
             self._executar_em_thread(self._tarefa_devolver, filme["titulo"])
 
+    # Confirma e inicia a thread secundária para remover o filme do catálogo
     def remover_filme_selecionado(self):
         linha = self.tabela_filmes.currentRow()
         if linha < 0:
@@ -292,6 +318,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage("Removendo filme...")
             self._executar_em_thread(self._tarefa_remover_filme, filme["titulo"])
 
+    # Abre a janela secundária para gerenciar os clientes cadastrados
     def abrir_janela_clientes(self):
         if self.janela_clientes is None:
             self.janela_clientes = JanelaClientes(self.clientes, self)
@@ -302,12 +329,15 @@ class MainWindow(QMainWindow):
         self.janela_clientes.raise_()
         self.janela_clientes.activateWindow()
 
+    # Inicia a thread secundária para salvar o novo cliente adicionado
     def registrar_novo_cliente(self, nome: str):
         self._executar_em_thread(self._tarefa_adicionar_cliente, nome)
 
+    # Inicia a thread secundária para remover o cliente selecionado
     def remover_cliente_lista(self, nome: str):
         self._executar_em_thread(self._tarefa_remover_cliente, nome)
 
+    # Exibe caixa de diálogo informativa com detalhes sobre a aplicação
     def mostrar_sobre(self):
         QMessageBox.about(
             self, "Sobre",
@@ -315,6 +345,7 @@ class MainWindow(QMainWindow):
             "Trabalho de POO II - PySide6\n",
         )
 
+    # Inicia a thread de exportação de relatório e abre o diálogo de progresso
     def exportar_relatorio(self):
         self.dialogo_progresso = DialogProgress(self)
         self.export_thread = ExportThread(self.service, parent=self)
@@ -326,24 +357,29 @@ class MainWindow(QMainWindow):
         self.dialogo_progresso.show()
         self.export_thread.start()
 
+    # Notifica o diálogo e a barra de status quando a exportação termina com sucesso
     def _ao_exportacao_concluida(self, caminho: str):
         if self.dialogo_progresso:
             self.dialogo_progresso.ao_concluir(caminho)
         self.statusBar().showMessage(f"Relatório exportado para: {caminho}", 5000)
 
+    # Exibe caixa de erro caso ocorra falha durante a exportação
     def _ao_exportacao_erro(self, mensagem: str):
         if self.dialogo_progresso:
             self.dialogo_progresso.ao_erro(mensagem)
         QMessageBox.critical(self, "Erro na Exportação", f"Falha ao exportar relatório: {mensagem}")
 
+    # Remove a thread de exportação da lista de threads ativas quando concluída
     def _ao_exportacao_finalizada(self):
         self.threads_ativas = [t for t in self.threads_ativas if not t.isFinished()]
 
+    # Trata evento de teclado: pressionar Delete remove o filme selecionado na tabela
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete:
             self.remover_filme_selecionado()
         super().keyPressEvent(event)
 
+    # Atualiza a barra de status com as novas dimensões ao redimensionar a janela
     def resizeEvent(self, event):
         tamanho = event.size()
         self.statusBar().showMessage(
@@ -351,6 +387,7 @@ class MainWindow(QMainWindow):
         )
         super().resizeEvent(event)
 
+    # Intercepta o fechamento da janela: pede confirmação e aguarda o encerramento seguro das threads
     def closeEvent(self, event):
         resposta = QMessageBox.question(
             self, "Confirmar saída",

@@ -13,6 +13,7 @@ class CsvStorage:
 
     CABECALHO = ["id", "data_hora", "tipo", "titulo", "cliente", "observacao"]
 
+    # Inicializa o storage CSV e cria o diretório/arquivo se necessário
     def __init__(self, data_dir: Optional[Path] = None, auto_inicializar: bool = True):
         self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -21,12 +22,14 @@ class CsvStorage:
         if auto_inicializar:
             self.inicializar_arquivo()
 
+    # Cria o arquivo CSV com o cabeçalho se ele ainda não existir
     def inicializar_arquivo(self) -> None:
         if not self.csv_path.exists() or self.csv_path.stat().st_size == 0:
             with open(self.csv_path, "w", encoding="utf-8", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=self.CABECALHO)
                 writer.writeheader()
 
+    # Grava uma nova transação com ID único e data/hora no arquivo CSV
     def registrar_transacao(self, tipo: str, titulo: str, cliente: str, observacao: str = "") -> Dict[str, str]:
         self.inicializar_arquivo()
         registro = {
@@ -42,12 +45,15 @@ class CsvStorage:
             writer.writerow(registro)
         return registro
 
+    # Atalho para registrar uma transação de LOCAÇÃO no CSV
     def registrar_locacao(self, titulo: str, cliente: str, observacao: str = "") -> Dict[str, str]:
         return self.registrar_transacao("LOCACAO", titulo, cliente, observacao)
 
+    # Atalho para registrar uma transação de DEVOLUÇÃO no CSV
     def registrar_devolucao(self, titulo: str, cliente: str, observacao: str = "") -> Dict[str, str]:
         return self.registrar_transacao("DEVOLUCAO", titulo, cliente, observacao)
 
+    # Lê todas as linhas do CSV e retorna como lista de dicionários
     def carregar_transacoes(self) -> List[Dict[str, str]]:
         if not self.csv_path.exists() or self.csv_path.stat().st_size == 0:
             return []
@@ -58,9 +64,11 @@ class CsvStorage:
         except (csv.Error, OSError):
             return []
 
+    # Retorna o histórico completo de transações
     def obter_transacoes(self) -> List[Dict[str, str]]:
         return self.carregar_transacoes()
 
+    # Filtra as transações realizadas por um determinado cliente
     def buscar_por_cliente(self, cliente: str) -> List[Dict[str, str]]:
         cliente_alvo = cliente.strip().lower()
         return [
@@ -68,6 +76,7 @@ class CsvStorage:
             if t.get("cliente", "").strip().lower() == cliente_alvo
         ]
 
+    # Filtra as transações relacionadas a um filme específico
     def buscar_por_filme(self, titulo: str) -> List[Dict[str, str]]:
         titulo_alvo = titulo.strip().lower()
         return [
@@ -75,6 +84,7 @@ class CsvStorage:
             if t.get("titulo", "").strip().lower() == titulo_alvo
         ]
 
+    # Filtra as transações por tipo (LOCACAO ou DEVOLUCAO)
     def buscar_por_tipo(self, tipo: str) -> List[Dict[str, str]]:
         tipo_alvo = tipo.strip().upper()
         return [
@@ -82,6 +92,7 @@ class CsvStorage:
             if t.get("tipo", "").strip().upper() == tipo_alvo
         ]
 
+    # Filtra as transações dentro de um intervalo de datas
     def buscar_por_periodo(self, data_inicio: str, data_fim: str) -> List[Dict[str, str]]:
         inicio = data_inicio.strip()
         fim = data_fim.strip()
@@ -94,6 +105,7 @@ class CsvStorage:
                 resultado.append(t)
         return resultado
 
+    # Gera ranking com os filmes mais alugados a partir do CSV
     def gerar_relatorio_mais_alugados(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
         locacoes = [t["titulo"] for t in self.carregar_transacoes() if t.get("tipo") == "LOCACAO"]
         contagem = Counter(locacoes)
@@ -103,6 +115,7 @@ class CsvStorage:
         ]
         return ranking
 
+    # Gera ranking com os clientes que mais realizaram locações
     def gerar_relatorio_clientes_mais_ativos(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
         clientes = [t["cliente"] for t in self.carregar_transacoes() if t.get("tipo") == "LOCACAO"]
         contagem = Counter(clientes)
@@ -112,6 +125,7 @@ class CsvStorage:
         ]
         return ranking
 
+    # Identifica e retorna as locações pendentes (alugadas sem devolução correspondente)
     def obter_locacoes_pendentes(self) -> List[Dict[str, str]]:
         transacoes = self.carregar_transacoes()
         pendencias = []
@@ -129,6 +143,7 @@ class CsvStorage:
                         break
         return pendencias
 
+    # Gera dados estatísticos gerais da locadora para relatórios
     def gerar_resumo_geral(self) -> Dict[str, Any]:
         transacoes = self.carregar_transacoes()
         total_locacoes = sum(1 for t in transacoes if t.get("tipo") == "LOCACAO")

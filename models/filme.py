@@ -1,5 +1,6 @@
 CATEGORIAS = ["Ação", "Comédia", "Drama", "Terror", "Ficção Científica", "Animação"]
 
+# Retorna a lista inicial de filmes cadastrados por padrão no sistema
 def filmes_iniciais():
     return [
         {"titulo": "O Poderoso Chefão", "categoria": "Drama", "copias": 3, "total_copias": 3, "disponivel": True},
