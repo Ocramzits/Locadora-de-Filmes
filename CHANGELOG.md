@@ -63,3 +63,11 @@
 - **Modelagem Relacional ORM (`backend/models_db.py`):** Mapeamento das tabelas relacionais `filmes` (`FilmeDB`), `clientes` (`ClienteDB`) e `locacoes` (`LocacaoDB`), com chaves primárias, restrições de unicidade, chaves estrangeiras e relacionamentos bidirecionais.
 - **Migração e Carga Inicial de Dados (`backend/seed.py`):** Criação de script de inicialização do esquema do banco de dados e rotina de seed automático com os dados pré-cadastrados do catálogo de filmes e clientes.
 
+### Servidor FastAPI e Endpoints REST de Filmes e Clientes (Guylherme Santos)
+
+- **Servidor Web FastAPI (`backend/main.py`):** Inicialização da aplicação FastAPI com documentação Swagger/OpenAPI automática, middleware CORS configurado para integração em rede e rota de verificação de integridade (`GET /health`).
+- **Schemas de Validação Pydantic (`backend/schemas.py`):** Criação dos schemas de entrada e saída (`FilmeCreate`, `FilmeResponse`, `ClienteCreate`, `ClienteResponse`) com validação estrita de dados e suporte a mapeamento de atributos relacionais (`from_attributes`).
+- **Endpoints CRUD de Filmes (`backend/routers/filmes.py`):** Implementação de rotas REST para listagem de filmes (`GET /filmes`), cadastro com validação de duplicidade (`POST /filmes`), busca individual por título (`GET /filmes/{titulo}`) e remoção (`DELETE /filmes/{titulo}`).
+- **Endpoints CRUD de Clientes (`backend/routers/clientes.py`):** Implementação de rotas REST para listagem de clientes cadastrados (`GET /clientes`), adição de clientes (`POST /clientes`) e remoção (`DELETE /clientes/{nome}`).
+
+
