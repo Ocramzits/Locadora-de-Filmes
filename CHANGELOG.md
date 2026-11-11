@@ -53,3 +53,13 @@
 - **Thread de Exportação (`threads/export_thread.py`):** Implementação da classe `ExportThread` (herda de `QThread`), que processa a compilação de relatórios e dados da locadora em segundo plano de forma concorrente e sem congelamento da interface. Durante a execução, emite sinais de progresso com porcentagem inteira (`progresso` e `porcentagem`), além dos sinais `concluido` e `erro`.
 - **Janela de Progresso (`views/dialog_progress.py`):** Criação da classe `DialogProgress` utilizando `QProgressBar` para exibir o avanço percentual da exportação de relatórios em tempo real.
 - **Integração na Janela Principal (`views/main_window.py`):** Adição da funcionalidade de exportação de relatórios via barra de ferramentas e menu de arquivo (`Ctrl+E`). A interface aciona a `ExportThread` conectada aos sinais de atualização do `DialogProgress` e notifica o usuário na barra de status após a conclusão.
+
+## Entrega Parcial 1 - 13/11/2026
+
+### Infraestrutura Docker e Modelagem Relacional (Domingos de Melo)
+
+- **Conteinerização com Docker (`docker-compose.yml`):** Configuração do serviço de banco de dados relacional utilizando a imagem oficial PostgreSQL 16 Alpine, mapeamento de portas locais e persistência de dados em volume nomeado (`postgres_data`).
+- **Conexão e Sessão de Banco de Dados (`backend/database.py`):** Configuração do engine SQLAlchemy com suporte a pool de conexões, gerenciamento de sessões via `SessionLocal` e base declarativa para o mapeamento objeto-relacional (ORM).
+- **Modelagem Relacional ORM (`backend/models_db.py`):** Mapeamento das tabelas relacionais `filmes` (`FilmeDB`), `clientes` (`ClienteDB`) e `locacoes` (`LocacaoDB`), com chaves primárias, restrições de unicidade, chaves estrangeiras e relacionamentos bidirecionais.
+- **Migração e Carga Inicial de Dados (`backend/seed.py`):** Criação de script de inicialização do esquema do banco de dados e rotina de seed automático com os dados pré-cadastrados do catálogo de filmes e clientes.
+
