@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from pydantic import BaseModel
 
@@ -24,7 +25,6 @@ class FilmeResponse(BaseModel):
 
     class Config:
         from_attributes = True
-        orm_mode = True
 
 class ClienteBase(BaseModel):
     nome: str
@@ -38,4 +38,29 @@ class ClienteResponse(BaseModel):
 
     class Config:
         from_attributes = True
-        orm_mode = True
+
+class LocacaoCreate(BaseModel):
+    titulo: Optional[str] = None
+    filme_titulo: Optional[str] = None
+    cliente: Optional[str] = None
+    cliente_nome: Optional[str] = None
+
+class DevolucaoCreate(BaseModel):
+    titulo: Optional[str] = None
+    filme_titulo: Optional[str] = None
+    cliente: Optional[str] = None
+    cliente_nome: Optional[str] = None
+
+class LocacaoResponse(BaseModel):
+    id: Optional[int] = None
+    filme_id: Optional[int] = None
+    cliente_id: Optional[int] = None
+    titulo: Optional[str] = None
+    cliente: Optional[str] = None
+    data_locacao: Optional[datetime] = None
+    data_devolucao: Optional[datetime] = None
+    status: str
+    observacao: Optional[str] = ""
+
+    class Config:
+        from_attributes = True
