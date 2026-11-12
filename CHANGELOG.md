@@ -70,4 +70,12 @@
 - **Endpoints CRUD de Filmes (`backend/routers/filmes.py`):** Implementação de rotas REST para listagem de filmes (`GET /filmes`), cadastro com validação de duplicidade (`POST /filmes`), busca individual por título (`GET /filmes/{titulo}`) e remoção (`DELETE /filmes/{titulo}`).
 - **Endpoints CRUD de Clientes (`backend/routers/clientes.py`):** Implementação de rotas REST para listagem de clientes cadastrados (`GET /clientes`), adição de clientes (`POST /clientes`) e remoção (`DELETE /clientes/{nome}`).
 
+### Regras de Negócio na API e Cliente HTTP de Rede (Marco Antônio)
+
+- **Lógica de Negócios Transacional (`backend/crud.py`):** Implementação de operações transacionais atômicas com SQLAlchemy para aluguel e devolução de filmes, controle estrito de estoque de cópias disponíveis, criação dinâmica de clientes e atualização de status de locação (`PENDENTE` e `DEVOLVIDO`).
+- **Rotas Transacionais e Histórico na API (`backend/routers/locacoes.py`):** Implementação dos endpoints REST para realização de aluguel (`POST /locacoes/alugar`), devolução (`POST /locacoes/devolver`), listagem de locações em aberto (`GET /locacoes/pendentes`) e consulta ao histórico transacional completo (`GET /locacoes` e `GET /locacoes/historico`).
+- **Cliente HTTP Desktop (`services/api_client.py`):** Criação da classe `ApiClient` utilizando a biblioteca `requests`, centralizando todas as chamadas HTTP para a API remota com parametrização flexível de host, porta e timeouts, além de métodos integrados para filmes, clientes e locações.
+- **Validação de Comunicação e Teste de Integração (`scripts/test_api_connection.py`):** Criação de script de validação de conectividade cliente-servidor que executa a suíte de testes de integração via `ApiClient`, verificando a saúde da API, CRUD e o ciclo completo de locação/devolução.
+
+
 
