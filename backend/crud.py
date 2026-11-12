@@ -210,3 +210,48 @@ def devolver_filme(db: Optional[Session], titulo: str, cliente_nome: Optional[st
     filme_alvo["disponivel"] = True
 
     return locacao_alvo
+
+def obter_locacoes_pendentes(db: Optional[Session]) -> List[Dict[str, Any]]:
+    if db is not None and LocacaoDB is not None:
+        locacoes = db.query(LocacaoDB).filter(LocacaoDB.status == "PENDENTE").order_by(LocacaoDB.data_locacao.asc()).all()
+        return [
+            {
+                "id": loc.id,
+                "filme_id": loc.filme_id,
+                "cliente_id": loc.cliente_id,
+                "titulo": loc.filme.titulo if loc.filme else "",
+                "cliente": loc.cliente.nome if loc.cliente else "",
+                "data_locacao": loc.data_locacao,
+                "data_devolucao": loc.data_devolucao,
+                "status": loc.status,
+                "observacao": loc.observacao or ""
+            }
+            for loc in locacoes
+        ]
+    return [loc for loc in _locacoes_memoria if loc.get("status") == "PENDENTE"]
+
+def obter_historico_locacoes(db: Optional[Session], limite: Optional[int] = None) -> List[Dict[str, Any]]:
+    if db is not None and LocacaoDB is not None:
+        consulta = db.query(LocacaoDB).order_by(LocacaoDB.id.desc())
+        if limite is not None and limite > 0:
+            consulta = consulta.limit(limite)
+        locacoes = consulta.all()
+        return [
+            {
+                "id": loc.id,
+                "filme_id": loc.filme_id,
+                "cliente_id": loc.cliente_id,
+                "titulo": loc.filme.titulo if loc.filme else "",
+                "cliente": loc.cliente.nome if loc.cliente else "",
+                "data_locacao": loc.data_locacao,
+                "data_devolucao": loc.data_devolucao,
+                "status": loc.status,
+                "observacao": loc.observacao or ""
+            }
+            for loc in locacoes
+        ]
+    resultado = list(reversed(_locacoes_memoria))
+    if limite is not None and limite > 0:
+        return resultado[:limite]
+    return resultado
+

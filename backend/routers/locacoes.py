@@ -1,3 +1,4 @@
+from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, status
 from backend.schemas import LocacaoCreate, DevolucaoCreate, LocacaoResponse
 from backend import crud
@@ -32,3 +33,13 @@ def devolver_filme(dados: DevolucaoCreate, db=Depends(obter_db_dependencia)):
         return crud.devolver_filme(db, titulo=titulo, cliente_nome=cliente)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.get("/pendentes", response_model=List[LocacaoResponse])
+def listar_locacoes_pendentes(db=Depends(obter_db_dependencia)):
+    return crud.obter_locacoes_pendentes(db)
+
+@router.get("", response_model=List[LocacaoResponse])
+@router.get("/", response_model=List[LocacaoResponse])
+@router.get("/historico", response_model=List[LocacaoResponse])
+def listar_historico_locacoes(limite: Optional[int] = None, db=Depends(obter_db_dependencia)):
+    return crud.obter_historico_locacoes(db, limite=limite)
