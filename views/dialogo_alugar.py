@@ -5,9 +5,8 @@ from PySide6.QtWidgets import (
 
 class DialogoAlugarFilme(QDialog):
 
-    filme_alugado = Signal(str, str)  
+    filme_alugado = Signal(str, str)
 
-    # Constrói o diálogo modal de locação exibindo o filme e o combo de clientes
     def __init__(self, titulo_filme: str, lista_clientes: list, parent=None):
         super().__init__(parent)
         self.titulo_filme = titulo_filme
@@ -15,7 +14,8 @@ class DialogoAlugarFilme(QDialog):
         self.setFixedSize(300, 160)
 
         self.combo_cliente = QComboBox()
-        self.combo_cliente.addItems(lista_clientes)
+        nomes_clientes = [c["nome"] if isinstance(c, dict) else str(c) for c in lista_clientes]
+        self.combo_cliente.addItems(nomes_clientes)
 
         botao_confirmar = QPushButton("Confirmar Locação")
         botao_confirmar.clicked.connect(self.confirmar_locacao)
@@ -27,7 +27,6 @@ class DialogoAlugarFilme(QDialog):
         layout.addWidget(botao_confirmar)
         self.setLayout(layout)
 
-    # Exibe caixa de confirmação e emite o sinal para registrar o aluguel
     def confirmar_locacao(self):
         cliente = self.combo_cliente.currentText()
         resposta = QMessageBox.question(

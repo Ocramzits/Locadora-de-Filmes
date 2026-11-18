@@ -77,5 +77,15 @@
 - **Cliente HTTP Desktop (`services/api_client.py`):** Criação da classe `ApiClient` utilizando a biblioteca `requests`, centralizando todas as chamadas HTTP para a API remota com parametrização flexível de host, porta e timeouts, além de métodos integrados para filmes, clientes e locações.
 - **Validação de Comunicação e Teste de Integração (`scripts/test_api_connection.py`):** Criação de script de validação de conectividade cliente-servidor que executa a suíte de testes de integração via `ApiClient`, verificando a saúde da API, CRUD e o ciclo completo de locação/devolução.
 
+## Entrega Parcial 2 - 20/11/2026
+
+### Integração da Interface Gráfica com API Remota (Marco Antônio)
+
+- **Refatoração da Camada de Serviço (`services/locadora_service.py`):** Reescrita completa do `LocadoraService` para delegar todas as operações de listagem, cadastro, locação, devolução e gerenciamento de clientes ao `ApiClient`, mantendo a assinatura pública de métodos inalterada e garantindo o desacoplamento da interface gráfica.
+- **Camada Assíncrona Resiliente a Falhas de Rede (`threads/io_thread.py`):** Adaptação da `IOThread` com sinal especializado `erro_conexao` para captura e tratamento diferenciado de falhas de conectividade (`ConnectionError`, `TimeoutError`), evitando congelamentos ou travamentos da GUI.
+- **Feedback Visual de Conexão e Tratamento de Queda na GUI (`views/main_window.py`):** Adição de indicador permanente de status do servidor (`● Servidor: Conectado` / `● Servidor: Desconectado`) na barra de status da `MainWindow`, além de caixas de diálogo informativas e amigáveis para falhas de conexão remota e expiração de timeouts.
+- **Compatibilização de Janelas e Diálogos (`views/janela_clientes.py` e `views/dialogo_alugar.py`):** Atualização do fluxo de clientes para sincronização dinâmica com os payloads retornados da API remota, suportando atualização em tempo real após inserções e exclusões.
+
+
 
 

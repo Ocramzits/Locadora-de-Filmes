@@ -4,17 +4,20 @@ class IOThread(QThread):
 
     concluido = Signal(object)
     erro = Signal(str)
+    erro_conexao = Signal(str)
 
-    # Recebe uma função demorada e seus argumentos para executar assincronamente
     def __init__(self, funcao, *args, parent=None):
         super().__init__(parent)
         self.funcao = funcao
         self.args = args
 
-    # Executa a função na thread secundária e emite o resultado ou eventual exceção
     def run(self):
         try:
             resultado = self.funcao(*self.args)
+        except (ConnectionError, TimeoutError) as e:
+            msg = str(e) or "Falha de conexão com o servidor remoto."
+            self.erro_conexao.emit(msg)
+            return
         except Exception as e:
             self.erro.emit(str(e))
             return
