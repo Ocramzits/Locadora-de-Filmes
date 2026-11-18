@@ -30,6 +30,10 @@ class MainWindow(QMainWindow):
         self.threads_ativas = []
         self.operacoes_pendentes = 0
 
+        self.label_status_conexao = QLabel("● Servidor: Verificando...")
+        self.label_status_conexao.setStyleSheet("color: rgb(245, 124, 0); font-weight: bold; margin-right: 12px;")
+        self.statusBar().addPermanentWidget(self.label_status_conexao)
+
         self._montar_interface()
         self._montar_toolbar()
         self._montar_menu()
@@ -131,6 +135,14 @@ class MainWindow(QMainWindow):
         acao_sobre.triggered.connect(self.mostrar_sobre)
         menu_ajuda.addAction(acao_sobre)
 
+    def _definir_status_conexao(self, conectado: bool):
+        if conectado:
+            self.label_status_conexao.setText("● Servidor: Conectado")
+            self.label_status_conexao.setStyleSheet("color: rgb(46, 125, 50); font-weight: bold; margin-right: 12px;")
+        else:
+            self.label_status_conexao.setText("● Servidor: Desconectado")
+            self.label_status_conexao.setStyleSheet("color: rgb(198, 40, 40); font-weight: bold; margin-right: 12px;")
+
     def _executar_em_thread(self, tarefa, *args):
         self.threads_ativas = [t for t in self.threads_ativas if not t.isFinished()]
 
@@ -158,18 +170,29 @@ class MainWindow(QMainWindow):
         self._atualizar_tabela()
         if self.janela_clientes is not None:
             self.janela_clientes.atualizar_clientes(self.clientes)
+        self._definir_status_conexao(True)
         self.statusBar().showMessage(mensagem, 5000)
 
     def _ao_erro(self, mensagem: str):
         QMessageBox.critical(self, "Erro", f"Ocorreu um erro na operação: {mensagem}")
 
     def _ao_erro_conexao(self, mensagem: str):
-        self.statusBar().showMessage("Servidor remoto inacessível.", 6000)
-        QMessageBox.critical(
-            self,
-            "Servidor Inacessível",
-            f"O servidor remoto está inacessível.\n\nDetalhes: {mensagem}\n\nVerifique se o backend FastAPI e o contêiner Docker estão em execução."
-        )
+        self._definir_status_conexao(False)
+        msg_minuscula = mensagem.lower()
+        if "timeout" in msg_minuscula or "tempo limite" in msg_minuscula:
+            self.statusBar().showMessage("Tempo limite de resposta do servidor esgotado.", 6000)
+            QMessageBox.warning(
+                self,
+                "Tempo Limite Esgotado",
+                f"A comunicação com o servidor remoto excedeu o tempo limite.\n\nDetalhes: {mensagem}\n\nVerifique a estabilidade da sua rede e tente novamente."
+            )
+        else:
+            self.statusBar().showMessage("Servidor remoto inacessível.", 6000)
+            QMessageBox.critical(
+                self,
+                "Servidor Inacessível",
+                f"O servidor remoto está inacessível.\n\nDetalhes: {mensagem}\n\nVerifique se o backend FastAPI e o contêiner Docker estão em execução."
+            )
 
     def _operacao_finalizada(self):
         self.operacoes_pendentes -= 1
