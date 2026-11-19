@@ -103,6 +103,7 @@ class ExportThread(QThread):
             self.progresso.emit(100)
             self.porcentagem.emit(100)
             time.sleep(0.05)
+            self.service.log_txt.registrar_exportacao(str(self.caminho_destino))
             self.concluido.emit(str(self.caminho_destino))
 
         except Exception as e:
