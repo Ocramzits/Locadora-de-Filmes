@@ -13,31 +13,39 @@ class ExportThread(QThread):
     concluido = Signal(str)
     erro = Signal(str)
 
-    # Inicializa a thread de exportação com o serviço e o caminho do arquivo de destino
     def __init__(self, service=None, caminho_destino=None, parent=None):
         super().__init__(parent)
         self.service = service if service is not None else LocadoraService()
         self.caminho_destino = Path(caminho_destino) if caminho_destino else Path("data") / "relatorio_exportado.txt"
 
-    # Coleta dados, gera o texto do relatório e salva no arquivo, emitindo sinais de progresso
     def run(self):
         try:
             self.progresso.emit(0)
             self.porcentagem.emit(0)
             time.sleep(0.1)
 
-            filmes = self.service.listar_filmes()
-            clientes = self.service.listar_clientes()
+            try:
+                filmes = self.service.listar_filmes()
+                clientes = self.service.listar_clientes()
+            except Exception:
+                filmes = self.service.json_storage.obter_filmes()
+                clientes = self.service.json_storage.obter_clientes()
 
             self.progresso.emit(25)
             self.porcentagem.emit(25)
             time.sleep(0.15)
 
-            with QMutexLocker(mutex_arquivos):
-                mais_alugados = self.service.csv_storage.gerar_relatorio_mais_alugados()
-                clientes_ativos = self.service.csv_storage.gerar_relatorio_clientes_mais_ativos()
-                pendentes = self.service.csv_storage.obter_locacoes_pendentes()
-                resumo = self.service.csv_storage.gerar_resumo_geral()
+            try:
+                resumo = self.service.obter_resumo_relatorio()
+                mais_alugados = self.service.obter_mais_alugados()
+                clientes_ativos = self.service.obter_clientes_mais_ativos()
+                pendentes = self.service.api_client.obter_locacoes_pendentes()
+            except Exception:
+                with QMutexLocker(mutex_arquivos):
+                    resumo = self.service.csv_storage.gerar_resumo_geral()
+                    mais_alugados = self.service.csv_storage.gerar_relatorio_mais_alugados()
+                    clientes_ativos = self.service.csv_storage.gerar_relatorio_clientes_mais_ativos()
+                    pendentes = self.service.csv_storage.obter_locacoes_pendentes()
 
             self.progresso.emit(50)
             self.porcentagem.emit(50)
@@ -71,7 +79,9 @@ class ExportThread(QThread):
             linhas.append("")
             linhas.append("--- LOCAÇÕES PENDENTES ---")
             for item in pendentes:
-                linhas.append(f"- Filme: {item.get('titulo')} | Cliente: {item.get('cliente')} | Data: {item.get('data_hora')}")
+                data_val = item.get("data_locacao") or item.get("data_hora") or "Não informada"
+                data_str = data_val.strftime("%d/%m/%Y %H:%M:%S") if hasattr(data_val, "strftime") else str(data_val)
+                linhas.append(f"- Filme: {item.get('titulo')} | Cliente: {item.get('cliente')} | Data: {data_str}")
 
             linhas.append("")
             linhas.append("--- CATÁLOGO COMPLETO ---")
