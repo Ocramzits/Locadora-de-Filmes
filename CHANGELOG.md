@@ -86,6 +86,9 @@
 - **Feedback Visual de Conexão e Tratamento de Queda na GUI (`views/main_window.py`):** Adição de indicador permanente de status do servidor (`● Servidor: Conectado` / `● Servidor: Desconectado`) na barra de status da `MainWindow`, além de caixas de diálogo informativas e amigáveis para falhas de conexão remota e expiração de timeouts.
 - **Compatibilização de Janelas e Diálogos (`views/janela_clientes.py` e `views/dialogo_alugar.py`):** Atualização do fluxo de clientes para sincronização dinâmica com os payloads retornados da API remota, suportando atualização em tempo real após inserções e exclusões.
 
+### Relatórios via API e Auditoria Local em Arquivo (Guylherme Santos)
 
-
-
+- **Endpoints Analíticos e Métricas na API (`backend/routers/relatorios.py`):** Implementação dos endpoints REST para compilação estatística do sistema (`GET /relatorios/resumo`), ranking de filmes com maior volume de locações (`GET /relatorios/mais-alugados`) e identificação de clientes mais ativos (`GET /relatorios/clientes-ativos`), com suporte a consultas agregadas no banco relacional e fallback em memória.
+- **Adaptação da Thread de Exportação com Progresso (`threads/export_thread.py`):** Atualização da `ExportThread` para consumir dados analíticos e de catálogo diretamente dos endpoints da API remota, mantendo a emissão assíncrona de sinais de progresso percentual para a `DialogProgress` e garantindo tolerância a falhas temporárias de conectividade.
+- **Auditoria Operacional Contínua em Arquivo Texto (`storage/log_txt.py` e `services/locadora_service.py`):** Integração sistemática do registro de log append-only em `data/transacoes.txt` a cada operação de rede bem-sucedida (cadastro de filmes, remoção de filmes, cadastro e remoção de clientes, locações, devoluções e exportações), assegurando a persistência híbrida e rastreabilidade local.
+- **Relatório Consolidado Exportado (`data/relatorio_exportado.txt`):** Geração formatada em disco contendo cabeçalho institucional, resumo operacional quantitativo, rankings de locação, lista de pendências ativas e catálogo detalhado da locadora.

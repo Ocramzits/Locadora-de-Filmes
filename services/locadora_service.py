@@ -26,11 +26,17 @@ class LocadoraService:
 
     def cadastrar_filme(self, filme: dict) -> bool:
         with QMutexLocker(mutex_arquivos):
-            return self.api_client.cadastrar_filme(filme)
+            sucesso = self.api_client.cadastrar_filme(filme)
+            if sucesso:
+                self.log_txt.registrar_cadastro_filme(filme.get("titulo", ""), filme.get("categoria", ""))
+            return sucesso
 
     def remover_filme(self, titulo: str) -> bool:
         with QMutexLocker(mutex_arquivos):
-            return self.api_client.remover_filme(titulo)
+            sucesso = self.api_client.remover_filme(titulo)
+            if sucesso:
+                self.log_txt.registrar_remocao_filme(titulo)
+            return sucesso
 
     def alugar_filme(self, titulo: str, cliente: str) -> bool:
         with QMutexLocker(mutex_arquivos):
@@ -54,8 +60,26 @@ class LocadoraService:
 
     def adicionar_cliente(self, nome: str) -> bool:
         with QMutexLocker(mutex_arquivos):
-            return self.api_client.adicionar_cliente(nome)
+            sucesso = self.api_client.adicionar_cliente(nome)
+            if sucesso:
+                self.log_txt.registrar_cadastro_cliente(nome)
+            return sucesso
 
     def remover_cliente(self, nome: str) -> bool:
         with QMutexLocker(mutex_arquivos):
-            return self.api_client.remover_cliente(nome)
+            sucesso = self.api_client.remover_cliente(nome)
+            if sucesso:
+                self.log_txt.registrar_remocao_cliente(nome)
+            return sucesso
+
+    def obter_resumo_relatorio(self) -> Dict[str, Any]:
+        with QMutexLocker(mutex_arquivos):
+            return self.api_client.obter_resumo_relatorio()
+
+    def obter_mais_alugados(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
+        with QMutexLocker(mutex_arquivos):
+            return self.api_client.obter_mais_alugados(limite)
+
+    def obter_clientes_mais_ativos(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
+        with QMutexLocker(mutex_arquivos):
+            return self.api_client.obter_clientes_mais_ativos(limite)

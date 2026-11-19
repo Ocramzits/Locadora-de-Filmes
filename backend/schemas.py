@@ -64,3 +64,19 @@ class LocacaoResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ResumoRelatorioResponse(BaseModel):
+    total_transacoes: int
+    total_locacoes: int
+    total_devolucoes: int
+    locacoes_pendentes: int
+    total_clientes_distintos: int
+    total_filmes_distintos: int
+
+class ItemMaisAlugado(BaseModel):
+    titulo: str
+    total_locacoes: int
+
+class ItemClienteAtivo(BaseModel):
+    cliente: str
+    total_locacoes: int

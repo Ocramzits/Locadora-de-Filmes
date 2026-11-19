@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import filmes, clientes, locacoes
+from backend.routers import filmes, clientes, locacoes, relatorios
 
 app = FastAPI(
     title="Locadora de Filmes API",
@@ -18,6 +18,7 @@ app.add_middleware(
 app.include_router(filmes.router)
 app.include_router(clientes.router)
 app.include_router(locacoes.router)
+app.include_router(relatorios.router)
 
 @app.get("/health")
 def health_check():

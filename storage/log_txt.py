@@ -8,7 +8,6 @@ DEFAULT_DATA_DIR = BASE_DIR / "data"
 
 class LogTxt:
 
-    # Inicializa o storage do log em texto puro (transacoes.txt)
     def __init__(self, data_dir: Optional[Path] = None, auto_inicializar: bool = True):
         self.data_dir = Path(data_dir) if data_dir else DEFAULT_DATA_DIR
         self.data_dir.mkdir(parents=True, exist_ok=True)
@@ -17,12 +16,10 @@ class LogTxt:
         if auto_inicializar:
             self.inicializar_arquivo()
 
-    # Cria o arquivo transacoes.txt se ele ainda não existir
     def inicializar_arquivo(self) -> None:
         if not self.log_path.exists():
             self.log_path.touch()
 
-    # Formata e grava uma linha de log com timestamp, tipo, filme e cliente
     def gravar_log(self, tipo: str, titulo: str, cliente: str, observacao: str = "") -> str:
         self.inicializar_arquivo()
         data_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -33,22 +30,34 @@ class LogTxt:
             f.write(linha)
         return linha.strip()
 
-    # Atalho para registrar log de uma LOCAÇÃO
     def registrar_locacao(self, titulo: str, cliente: str, observacao: str = "") -> str:
         return self.gravar_log("LOCACAO", titulo, cliente, observacao)
 
-    # Atalho para registrar log de uma DEVOLUÇÃO
     def registrar_devolucao(self, titulo: str, cliente: str, observacao: str = "") -> str:
         return self.gravar_log("DEVOLUCAO", titulo, cliente, observacao)
 
-    # Lê e retorna todas as linhas gravadas no arquivo de log
+    def registrar_cadastro_filme(self, titulo: str, categoria: str = "") -> str:
+        obs = f"Categoria: {categoria}" if categoria else ""
+        return self.gravar_log("CADASTRO_FILME", titulo, "-", obs)
+
+    def registrar_remocao_filme(self, titulo: str) -> str:
+        return self.gravar_log("REMOCAO_FILME", titulo, "-")
+
+    def registrar_cadastro_cliente(self, cliente: str) -> str:
+        return self.gravar_log("CADASTRO_CLIENTE", "-", cliente)
+
+    def registrar_remocao_cliente(self, cliente: str) -> str:
+        return self.gravar_log("REMOCAO_CLIENTE", "-", cliente)
+
+    def registrar_exportacao(self, caminho_arquivo: str) -> str:
+        return self.gravar_log("EXPORTACAO_RELATORIO", "-", "-", f"Arquivo: {caminho_arquivo}")
+
     def ler_logs(self) -> List[str]:
         if not self.log_path.exists():
             return []
         with open(self.log_path, "r", encoding="utf-8") as f:
             return [linha.strip() for linha in f if linha.strip()]
 
-    # Limpa todo o conteúdo do arquivo transacoes.txt
     def limpar_logs(self) -> None:
         with open(self.log_path, "w", encoding="utf-8") as f:
             f.truncate(0)

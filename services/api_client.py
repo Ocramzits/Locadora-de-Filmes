@@ -134,3 +134,24 @@ class ApiClient:
         resp = self._tratar_requisicao("GET", "/locacoes", params=params)
         resp.raise_for_status()
         return resp.json()
+
+    def obter_resumo_relatorio(self) -> Dict[str, Any]:
+        resp = self._tratar_requisicao("GET", "/relatorios/resumo")
+        resp.raise_for_status()
+        return resp.json()
+
+    def obter_mais_alugados(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if limite is not None:
+            params["limite"] = limite
+        resp = self._tratar_requisicao("GET", "/relatorios/mais-alugados", params=params)
+        resp.raise_for_status()
+        return resp.json()
+
+    def obter_clientes_mais_ativos(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
+        params = {}
+        if limite is not None:
+            params["limite"] = limite
+        resp = self._tratar_requisicao("GET", "/relatorios/clientes-ativos", params=params)
+        resp.raise_for_status()
+        return resp.json()
