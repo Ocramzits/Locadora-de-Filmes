@@ -255,3 +255,76 @@ def obter_historico_locacoes(db: Optional[Session], limite: Optional[int] = None
         return resultado[:limite]
     return resultado
 
+def obter_resumo_geral(db: Optional[Session]) -> Dict[str, Any]:
+    if db is not None and LocacaoDB is not None and FilmeDB is not None and ClienteDB is not None:
+        total_locacoes = db.query(LocacaoDB).count()
+        total_devolucoes = db.query(LocacaoDB).filter(LocacaoDB.status == "DEVOLVIDO").count()
+        locacoes_pendentes = db.query(LocacaoDB).filter(LocacaoDB.status == "PENDENTE").count()
+        total_transacoes = total_locacoes + total_devolucoes
+        total_clientes = db.query(ClienteDB).count()
+        total_filmes = db.query(FilmeDB).count()
+        return {
+            "total_transacoes": total_transacoes,
+            "total_locacoes": total_locacoes,
+            "total_devolucoes": total_devolucoes,
+            "locacoes_pendentes": locacoes_pendentes,
+            "total_clientes_distintos": total_clientes,
+            "total_filmes_distintos": total_filmes
+        }
+    total_locacoes = len(_locacoes_memoria)
+    total_devolucoes = sum(1 for loc in _locacoes_memoria if loc.get("status") == "DEVOLVIDO")
+    locacoes_pendentes = sum(1 for loc in _locacoes_memoria if loc.get("status") == "PENDENTE")
+    total_transacoes = total_locacoes + total_devolucoes
+    clientes = _obter_dados_memoria_clientes()
+    filmes = _obter_dados_memoria_filmes()
+    return {
+        "total_transacoes": total_transacoes,
+        "total_locacoes": total_locacoes,
+        "total_devolucoes": total_devolucoes,
+        "locacoes_pendentes": locacoes_pendentes,
+        "total_clientes_distintos": len(clientes),
+        "total_filmes_distintos": len(filmes)
+    }
+
+def obter_mais_alugados(db: Optional[Session], limite: Optional[int] = None) -> List[Dict[str, Any]]:
+    if db is not None and LocacaoDB is not None and FilmeDB is not None:
+        from sqlalchemy import func
+        consulta = (
+            db.query(FilmeDB.titulo, func.count(LocacaoDB.id).label("total_locacoes"))
+            .join(LocacaoDB, LocacaoDB.filme_id == FilmeDB.id)
+            .group_by(FilmeDB.id, FilmeDB.titulo)
+            .order_by(func.count(LocacaoDB.id).desc())
+        )
+        if limite is not None and limite > 0:
+            consulta = consulta.limit(limite)
+        resultados = consulta.all()
+        return [{"titulo": r[0], "total_locacoes": int(r[1])} for r in resultados]
+    from collections import Counter
+    contagem = Counter(loc["titulo"] for loc in _locacoes_memoria if loc.get("titulo"))
+    ranking = [
+        {"titulo": titulo, "total_locacoes": qtd}
+        for titulo, qtd in contagem.most_common(limite if (limite and limite > 0) else None)
+    ]
+    return ranking
+
+def obter_clientes_ativos(db: Optional[Session], limite: Optional[int] = None) -> List[Dict[str, Any]]:
+    if db is not None and LocacaoDB is not None and ClienteDB is not None:
+        from sqlalchemy import func
+        consulta = (
+            db.query(ClienteDB.nome, func.count(LocacaoDB.id).label("total_locacoes"))
+            .join(LocacaoDB, LocacaoDB.cliente_id == ClienteDB.id)
+            .group_by(ClienteDB.id, ClienteDB.nome)
+            .order_by(func.count(LocacaoDB.id).desc())
+        )
+        if limite is not None and limite > 0:
+            consulta = consulta.limit(limite)
+        resultados = consulta.all()
+        return [{"cliente": r[0], "total_locacoes": int(r[1])} for r in resultados]
+    from collections import Counter
+    contagem = Counter(loc["cliente"] for loc in _locacoes_memoria if loc.get("cliente"))
+    ranking = [
+        {"cliente": cliente, "total_locacoes": qtd}
+        for cliente, qtd in contagem.most_common(limite if (limite and limite > 0) else None)
+    ]
+    return ranking
+

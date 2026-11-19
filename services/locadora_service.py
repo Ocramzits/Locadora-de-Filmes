@@ -59,3 +59,15 @@ class LocadoraService:
     def remover_cliente(self, nome: str) -> bool:
         with QMutexLocker(mutex_arquivos):
             return self.api_client.remover_cliente(nome)
+
+    def obter_resumo_relatorio(self) -> Dict[str, Any]:
+        with QMutexLocker(mutex_arquivos):
+            return self.api_client.obter_resumo_relatorio()
+
+    def obter_mais_alugados(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
+        with QMutexLocker(mutex_arquivos):
+            return self.api_client.obter_mais_alugados(limite)
+
+    def obter_clientes_mais_ativos(self, limite: Optional[int] = None) -> List[Dict[str, Any]]:
+        with QMutexLocker(mutex_arquivos):
+            return self.api_client.obter_clientes_mais_ativos(limite)
