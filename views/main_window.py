@@ -206,7 +206,7 @@ class MainWindow(QMainWindow):
         self.barra_ferramentas.setEnabled(not ocupado)
 
     def _ao_backup_realizado(self, timestamp: str):
-        self.statusBar().showMessage(f"Último backup: {timestamp}", 10000)
+        self.statusBar().showMessage(f"Snapshot remoto sincronizado às {timestamp} (data/backup_remoto.json)", 10000)
 
     def _tarefa_carregar(self):
         return "Dados carregados da API remota"
