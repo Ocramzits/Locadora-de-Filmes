@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
 
         self.backup_thread = BackupThread(self.service, intervalo_segundos=300)
         self.backup_thread.backup_realizado.connect(self._ao_backup_realizado)
+        self.backup_thread.falha_backup.connect(self._ao_falha_backup)
         self.backup_thread.start()
 
         self.statusBar().showMessage("Carregando dados da API remota...")
@@ -207,6 +208,9 @@ class MainWindow(QMainWindow):
 
     def _ao_backup_realizado(self, timestamp: str):
         self.statusBar().showMessage(f"Snapshot remoto sincronizado às {timestamp} (data/backup_remoto.json)", 10000)
+
+    def _ao_falha_backup(self, mensagem: str):
+        self.statusBar().showMessage(f"Aviso: Falha ao sincronizar snapshot remoto ({mensagem})", 5000)
 
     def _tarefa_carregar(self):
         return "Dados carregados da API remota"
