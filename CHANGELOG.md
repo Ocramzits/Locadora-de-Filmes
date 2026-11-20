@@ -92,3 +92,10 @@
 - **Adaptação da Thread de Exportação com Progresso (`threads/export_thread.py`):** Atualização da `ExportThread` para consumir dados analíticos e de catálogo diretamente dos endpoints da API remota, mantendo a emissão assíncrona de sinais de progresso percentual para a `DialogProgress` e garantindo tolerância a falhas temporárias de conectividade.
 - **Auditoria Operacional Contínua em Arquivo Texto (`storage/log_txt.py` e `services/locadora_service.py`):** Integração sistemática do registro de log append-only em `data/transacoes.txt` a cada operação de rede bem-sucedida (cadastro de filmes, remoção de filmes, cadastro e remoção de clientes, locações, devoluções e exportações), assegurando a persistência híbrida e rastreabilidade local.
 - **Relatório Consolidado Exportado (`data/relatorio_exportado.txt`):** Geração formatada em disco contendo cabeçalho institucional, resumo operacional quantitativo, rankings de locação, lista de pendências ativas e catálogo detalhado da locadora.
+
+### Sincronização em Background e Docker Healthcheck (Domingos de Melo)
+
+- **Sincronização Periódica e Snapshot Local (`threads/backup_thread.py`):** Adaptação da `BackupThread` para consultar em segundo plano a listagem de filmes, clientes e pendências da API remota, salvando snapshot consolidado em `data/backup_remoto.json` para contingência local e visualização offline.
+- **Healthcheck e Dependência de Serviços no Docker (`docker-compose.yml`):** Configuração de diretivas de `healthcheck` no PostgreSQL utilizando `pg_isready` e dependência condicional `depends_on` com `condition: service_healthy` para garantir inicialização ordenada dos serviços.
+- **Tolerância a Falhas e Reconexão Resiliente (`threads/backup_thread.py`):** Implementação de captura de falhas de comunicação e rotina de retentativas automáticas em intervalos reduzidos durante períodos de instabilidade da rede.
+- **Feedback na Interface Gráfica (`views/main_window.py`):** Conexão dos sinais de sucesso e alerta da thread de backup à barra de status da `MainWindow`, fornecendo notificações transparentes sem interromper o uso do sistema.
