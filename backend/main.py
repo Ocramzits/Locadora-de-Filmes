@@ -20,6 +20,14 @@ app.include_router(clientes.router)
 app.include_router(locacoes.router)
 app.include_router(relatorios.router)
 
+@app.on_event("startup")
+def startup_event():
+    try:
+        from backend.seed import seed_database
+        seed_database()
+    except Exception as e:
+        print(f"Aviso ao inicializar/popular banco de dados: {e}")
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
